@@ -30,7 +30,7 @@ pip install -r requirements.txt
 ```python
 #!/opt/homebrew/Caskroom/miniconda/base/envs/mathenv
 ```
- - Note you must run this as an executable in order for the #! to work 
+ - Note you must run this as an executable in order for the ```#!``` to work 
 
 ```zsh
 chmod +x filename.py
