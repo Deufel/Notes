@@ -1,5 +1,5 @@
 # Notes
-
+Personal Notes / Reminders
 ## Python 
 
 ### VENV
