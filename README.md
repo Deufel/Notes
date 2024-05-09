@@ -28,7 +28,7 @@ pip install -r requirements.txt
  - To specify the interpreter you can use the ```#!``` on the first line of a ```script.py```
 
 ```python
-#!/opt/homebrew/Caskroom/miniconda/base/envs/mathenv
+#!/Users/mikedeufel/code/python/HuggingFace/venv/bin/python
 ```
  - Note you must run this as an executable in order for the ```#!``` to work 
 
