@@ -38,6 +38,26 @@ ls -la #to verify
 ./filename.py
 ```
 
+### Data Basics
+#### Shuffle data
+```py
+import numpy as np
+
+data = np.arange(10)
+
+indicies_permutation = np.random.permutation(len(data))
+shuffled_data = data[indicies_permutation]
+
+print(f"data: \t\t{data}")
+print(f"shuffled: \t{shuffled_data}")
+
+'''
+----- OUTPUT -----
+data: 		[0 1 2 3 4 5 6 7 8 9]
+shuffled: 	[2 9 8 1 5 7 3 0 4 6]
+'''
+```
+
 ## GIT 
 
 ### Basics
