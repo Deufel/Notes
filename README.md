@@ -74,7 +74,8 @@ y_train = to_categorical(train_labels)
 ##### 2 Compile ```model.compile(optimizer=_, loss=_,metrics=[_])```
  - Set Optimizer to "rmsprop" for 95% of models
  - if binary classificationWhen then ```loss="binary_crossentropy"```
- - if single label multiclassification then ```loss=categorical_crossentropy``` 
+ - if single label multiclassification with OHE y then ```loss="categorical_crossentropy"``` 
+ - if single label multiclassification with int y then ```loss="sparse_categorical_crossentropy"```
 
 ##### 3 Fit ```model.fit(x_train, y_train, epochs=_, batch_size=_2^n_)```
  - epochs is number of forward + backward pass the model makes attempting to reduce loss carefull not to overfit
