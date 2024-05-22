@@ -57,6 +57,25 @@ data: 		[0 1 2 3 4 5 6 7 8 9]
 shuffled: 	[2 9 8 1 5 7 3 0 4 6]
 '''
 ```
+### Tensorflow
+#### Utilities
+- One Hot Encode
+```py
+from tensorflow.keras.utils import to_categorical
+y_train = to_categorical(train_labels)
+```
+
+#### Models
+##### 1 Architecture ```model.Sequential([layers.Dense(16,actyivation="relu"),....])```
+ - Simple stacked layers w/ relu activation can solve lots of problems
+ - Make last layer ```layers.Dense(1,activation="sigmoid")``` if you want to force output to [0,1]
+
+##### 2 Compile ```model.compile(optimizer=_, loss=_,metrics=[_])```
+ - When your output is a probability use Crossentropy for loss (if Binary then use binary_crossentropy)
+
+##### 3 Fit ```model.fit(x_train, y_train, epochs=_, batch_size=_2^n_)```
+ - epochs is number of forward + backward pass the model makes attempting to reduce loss carefull not to overfit
+
 
 ## GIT 
 
