@@ -8,7 +8,9 @@ Personal Notes / Reminders
 
 3. Pull a Node.js image ```podman pull node:latest```
 
-5. Create and run a container```podman run -it --name node-dev-container -v $(pwd):/usr/src/app -w /usr/src/app node:latest /bin/bash```
+5. Create and run a container```podman run -it -p 8080:8080 --name node-dev-container -v $(pwd):/usr/src/app -w /usr/src/app node:latest /bin/bash```
+ - 8080 access
+ - shared Volume
 
 5. Inside the container, install Node.js dependencies and start the development server ```npm install;npm start```
 
