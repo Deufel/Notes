@@ -157,3 +157,8 @@ git branch -d "new_feature" # will delete localy
 git push origin --delte "new_feature" # will delete from remote repo
 git branch -s # to verify
 ```
+### One Line init, add, commit
+
+```bash
+git init && git add -A && git commit -m "Initial commit"
+```
