@@ -145,10 +145,11 @@ git branch -d "new_feature" # will delete localy
 git push origin --delte "new_feature" # will delete from remote repo
 git branch -s # to verify
 ```
-### One Line init, add, commit
+### Easy
 
 ```bash
-git init && git add -A && git commit -m "Initial commit"
+git init && git add -A && git commit -m "Initial commit" # One Line init, add, commit
+git remote add origin https://github.com/yourusername/your-repo.git # Link to GitHub (check .gitignore)
 ```
 ## Useful Terminal (Linux/Mac)
 show ssh keys: ```ls -al ~/.ssh```
