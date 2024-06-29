@@ -113,7 +113,7 @@ git log # will show the History
 ```
 
 ### Remote Repo
-```bash
+```zsh
 git clone <url> <where to clone> # will also work for local files
 git remote -v # Lists Repo information
 git branch -a # List all of the Branches of the Repo
@@ -128,13 +128,15 @@ git push origin master
 ```
 
 ### Branching
-```bash
+```zsh
 git branch "new_feature" # Makes the branch
 git checkout "new_feature" # Moves you over the the branch
 git add -A
 git commit -m "small_new_feature" # uploads teh change ONLY to the branch
 git push -u origin "new_feature" # slightly complex command that associates the brance with main
 git branch -a # To verify
+git add -A && git commit -m "small new feature..."
+git push
 # Ready to merge with Master Branch
 git checkout master
 git pull origin master
@@ -147,7 +149,7 @@ git branch -s # to verify
 ```
 ### Easy
 
-```bash
+```zsh
 git init && git add -A && git commit -m "Initial commit" # One Line init, add, commit
 git remote add origin https://github.com/yourusername/your-repo.git # Link to GitHub (check .gitignore)
 ```
