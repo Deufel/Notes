@@ -146,6 +146,9 @@ git push origin master # Uploads the changes to remote repo
 git branch -d "new_feature" # will delete localy
 git push origin --delte "new_feature" # will delete from remote repo
 git branch -s # to verify
+# To go back to an old version and branch off
+git log --graph --oneline --all --decorate # to see all committs # 
+git checkout -b new-branch-name 4f8d768 # Creating a new branch from an old commit
 ```
 ### Easy
 
