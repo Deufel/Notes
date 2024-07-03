@@ -150,6 +150,18 @@ git branch -s # to verify
 git log --graph --oneline --all --decorate # to see all committs # 
 git checkout -b new-branch-name 4f8d768 # Creating a new branch from an old commit
 ```
+### Rolling back to a previous commit
+#### Step 1: Reset to the desired commit
+```
+git log -1                # Find commit 
+git reset --hard <....>   # Step 1: Roll Back
+git clean -n              # Step 2: Perform a dry run to see what will be removed
+git clean -f              # Step 3: Remove untracked files
+git clean -fd             # Step 4: Remove untracked directories
+git clean -fX             # Optional Step 5: Remove ignored files
+git clean -fdx            # Optional Step 6: Remove all untracked files, directories, and ignored files
+```
+
 ### Easy
 
 ```zsh
