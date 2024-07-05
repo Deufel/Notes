@@ -166,7 +166,7 @@ git clean -fdx            # Optional Step 6: Remove all untracked files, directo
 
 ### Easy
 
-```zsh
+
 1. Make a new repo (private example here)
 ```
 curl -u your-username:your-token https://api.github.com/user/repos -d '{"name":"my-private-repo", "private":true}'
@@ -179,6 +179,7 @@ git init && git add -A && git commit -m "Initial commit" # One Line init, add, c
 ```
 git remote add origin https://github.com/yourusername/your-repo.git # Link to GitHub (check .gitignore)
 ```
+
 ## Useful Terminal (Linux/Mac)
 show ssh keys: ```ls -al ~/.ssh```
 
