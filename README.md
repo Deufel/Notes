@@ -92,6 +92,7 @@ git --version
 # Set up
 git config --global user.name "Your Name"
 git config --global user.email "your_email@example.com"
+
 # Confirm
 git config --list
 
@@ -114,6 +115,7 @@ git log # will show the History
 
 ### Remote Repo
 ```zsh
+
 git clone <url> <where to clone> # will also work for local files
 git remote -v # Lists Repo information
 git branch -a # List all of the Branches of the Repo
@@ -165,7 +167,16 @@ git clean -fdx            # Optional Step 6: Remove all untracked files, directo
 ### Easy
 
 ```zsh
+1. Make a new repo (private example here)
+```
+curl -u your-username:your-token https://api.github.com/user/repos -d '{"name":"my-private-repo", "private":true}'
+```
+2.  One Line init, add, commit
+```
 git init && git add -A && git commit -m "Initial commit" # One Line init, add, commit
+```
+3. # Link to GitHub (double check .gitignore)
+```
 git remote add origin https://github.com/yourusername/your-repo.git # Link to GitHub (check .gitignore)
 ```
 ## Useful Terminal (Linux/Mac)
