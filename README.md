@@ -173,11 +173,10 @@ curl -u your-username:your-token https://api.github.com/user/repos -d '{"name":"
 ```
 2.  One Line init, add, commit
 ```
-git init && git add -A && git commit -m "Initial commit" # One Line init, add, commit
+git init && git add -A && git commit -m "Initial commit"
 ```
-3. # Link to GitHub (double check .gitignore)
 ```
-git remote add origin https://github.com/yourusername/your-repo.git # Link to GitHub (check .gitignore)
+git remote add origin https://github.com/yourusername/your-repo.git 
 ```
 
 ## Useful Terminal (Linux/Mac)
