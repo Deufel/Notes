@@ -179,7 +179,7 @@ git remote add origin https://github.com/yourusername/your-repo.git
 
 Push commit to linked repo
 ```
-git push -u origin main
+git push -u origin master
 ```
 
 
