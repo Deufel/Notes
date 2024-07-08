@@ -182,6 +182,15 @@ Push commit to linked repo
 git push -u origin master
 ```
 
+Note if you put any file in the git hub upon creation it will not like the push; to force it you can
+Force push to the remote repository
+Be CAREFUL when you do this. It will wipe out the remote repo should only be done on set up.
+```
+#----CAUTION
+git push --force origin master
+#----CAUTION
+```
+
 
 ## Useful Terminal (Linux/Mac)
 show ssh keys: ```ls -al ~/.ssh```
