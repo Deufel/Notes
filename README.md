@@ -174,11 +174,8 @@ git init && git add -A && git commit -m "Initial commit"
 
 Link To a repo
 ```
-git remote add origin https://github.com/yourusername/your-repo.git 
-```
-
-Push commit to linked repo
-```
+git remote add origin https://github.com/<username>/<repo>.git
+git branch -M master
 git push -u origin master
 ```
 
