@@ -4,14 +4,16 @@ Personal Notes / Reminders
 ## Python 
 
 ### VENV
-
-```zsh
-# to create a virtual enviorment named "venv"
+1. make venv
+```
 python3 -m venv venv
+```
 
-# to activate
+2. to activate
+```
 source ./venv/bin/activate
-
+```
+```
 # install packages pip / pip3
 pip install jupyter matplotlib numpy pandas scipy scikit-learn
 
