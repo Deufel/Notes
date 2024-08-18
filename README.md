@@ -83,6 +83,10 @@ y_train = to_categorical(train_labels)
 ##### 3 Fit ```model.fit(x_train, y_train, epochs=_, batch_size=_2^n_)```
  - epochs is number of forward + backward pass the model makes attempting to reduce loss carefull not to overfit
 
+### NbDev
+```.py
+nbdev_new
+```
 
 
 ## GIT 
@@ -154,6 +158,7 @@ git branch -s # to verify
 git log --graph --oneline --all --decorate # to see all committs # 
 git checkout -b new-branch-name 4f8d768 # Creating a new branch from an old commit
 ```
+
 ### Rolling back to a previous commit
 #### Step 1: Reset to the desired commit
 ```
@@ -177,6 +182,7 @@ git init && git add -A && git commit -m "Initial commit"
 Link To a repo
 ```
 git remote add origin https://github.com/<username>/<repo>.git
+## This is not a good way to do this ...
 git branch -M master
 git push -u origin master
 ```
