@@ -86,6 +86,8 @@ y_train = to_categorical(train_labels)
 ### NbDev
 ```.py
 nbdev_new
+nbdev_preview
+nbdev_prepare
 ```
 
 
