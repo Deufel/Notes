@@ -40,6 +40,14 @@ chmod +x filename.py
 ls -la #to verify
 ./filename.py
 ```
+### SQLite
+```.py
+import sqlite3
+print(db.execute("select sqlite_version()").fetchall()) # sqlite version
+db = sqlite3.connect("your_datebase.db")
+db.execute("select name from sqlite_master where type='table'").fetchall() # tables
+
+```
 
 ### Data Basics
 #### Shuffle data
