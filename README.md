@@ -53,8 +53,8 @@ db.row_factory = sqlite3.Row              # will convert rows to dict (easier to
 for row in db.execute("SELECT * FROM any_table LIMIT 10"): print(dict(row)) # rows (dictionaries)
 for row in db.execute("select name from sqlite_master where type='table'").fetchall(): pprint.pprint(dict(row)) # tables (pprint)
 for row in db.execute("SELECT * FROM stats LIMIT 10"): pprint.pprint((dict(row))) # rows (pprint)
-# Create
-db.execute(create table events (id integer primary key, name text, start_date text, end_date text, description text);
+''' Create '''
+db.execute("CREATE TABLE events(id integer primary key, name text, start_date text, end_date text, description text);")
 ```
 
 ### Data Basics
