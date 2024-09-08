@@ -6,12 +6,12 @@ Personal Notes / Reminders
 ### VENV
 1. make venv
 ```
-python3 -m venv venv
+python3 -mvenv .venv
 ```
 
 2. to activate
 ```
-source ./venv/bin/activate
+source ./.venv/bin/activate
 ```
 ```
 # install packages pip / pip3
