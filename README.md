@@ -44,12 +44,12 @@ ls -la #to verify
 ```.py
 import sqlite3
 import pprint
-# Inspect
+''' Inspect '''
 print(db.execute("select sqlite_version()").fetchall()) # sqlite version
 db = sqlite3.connect("your_datebase.db")
 db.execute("select name from sqlite_master where type='table'").fetchall()  # tables
 for row in db.execute("SELECT * FROM any_table LIMIT 10"): print(row)       # rows (tuples)
-db.row_factory = sqlite3.Row                                                # will convert rows to dict (easier to work with)
+db.row_factory = sqlite3.Row              # will convert rows to dict (easier to work with)
 for row in db.execute("SELECT * FROM any_table LIMIT 10"): print(dict(row)) # rows (dictionaries)
 for row in db.execute("select name from sqlite_master where type='table'").fetchall(): pprint.pprint(dict(row)) # tables (pprint)
 for row in db.execute("SELECT * FROM stats LIMIT 10"): pprint.pprint((dict(row))) # rows (pprint)
