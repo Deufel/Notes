@@ -1,0 +1,26 @@
+#cloud-config
+users:
+  - name: mike
+    ssh_authorized_keys:
+      - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDFHQ9hmVNR4kgOqcWXtQfSte2YZBMyvAo7rLszh7zD0JNw0MBJ+h8FFkSJLJnjwl0L15ClMn5oYdRSsLKgdsrIEmkv2unchiZy18RQdaiuEge3ISL0qYO6ZZJQMdwt0NkRNJtCFT3/ER2sT1YevO5YWvmhBqkUeS7CkFrbu8TxXdmm94lxegoqH7iGHEyH4F0x6+S//cyRY9/Ql1B7dQgwWmUnA020QLUxA4rgfNlfN/DDVTKxaf+Hs2vD7TdDXJd9oZPcTG90Q15vPvxibCTDpD1gjvmoNciNo0vw6TJAQLD0M5jviuuWRsOG+RUrcjYpni7fzo7upya1u3HVSFLy/N1AYmJMIRluCtBoePr3xCGPAQEwH7rZWF/qRXDk7Bu4cr7y8t8klZxeZAp7LWj5wNv5Qd3wsPOtucOyvRNHaHxiDKsV4r9M3yP0KGh58xOP3F/OoPQwzKCRvAVB8mCVMj8uA/sa8DrdxQsSJxo7exhmW3baIEzN/LPdSVrYsfGx1TCBKE3WSeijIxcGat1OsnLOgLTwqoonEY68lEZuMPflWN7ThaDu17k+IzZzo4xdGJhxNAmyWpsZdFgrja/VsnVP7ChoktKFzqH1UEC6CEHt2qw8cfX5rvmjzScAU38Z7JMLNtxLEYl2MTvyEQ0YxJ/cgtGRY6euQZmLA2m0Rw== MDeufel13@gmail.com"
+    sudo: ALL=(ALL:ALL) ALL
+    groups: sudo
+    shell: /bin/bash
+chpasswd:
+  expire: true
+  users:
+    - name: mike
+      password: changeme
+      type: text
+runcmd:
+  - sed -i '/PermitRootLogin/d' /etc/ssh/sshd_config
+  - echo "PermitRootLogin without-password" >> /etc/ssh/sshd_config
+  - sed -i '/PubkeyAuthentication/d' /etc/ssh/sshd_config
+  - echo "PubkeyAuthentication yes" >> /etc/ssh/sshd_config
+  - sed -i '/PasswordAuthentication/d' /etc/ssh/sshd_config
+  - echo "PasswordAuthentication no" >> /etc/ssh/sshd_config
+  - systemctl restart sshd
+  - echo "\$nrconf{kernelhints} = -1;" > /etc/needrestart/conf.d/99disable-prompt.conf
+  - apt update
+  - apt upgrade -y --allow-downgrades --allow-remove-essential --allow-change-held-packages
+  - reboot
