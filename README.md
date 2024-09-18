@@ -250,3 +250,13 @@ ssh-keygen -t rsa -b 4096 -f ~/.ssh/my_server_key
 ```
 ssh-copy-id -i ~/.ssh/custom_key_name.pub user@server_ip
 ```
+3. Edit ~/.ssh/config
+```
+Host orange
+    HostName server_ip
+    User user   # same as step 2
+    IdentityFile ~/.ssh/my_server_key
+'''
+>> ssh my_server_key # Will log you on
+'''
+```
