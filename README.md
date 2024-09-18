@@ -240,3 +240,13 @@ show ssh keys: ```ls -al ~/.ssh```
  - shared Volume
 
 5. Inside the container, install Node.js dependencies and start the development server ```npm install;npm start```
+
+## SSH 
+1. create new ssh
+```.bash
+ssh-keygen -t rsa -b 4096 -f ~/.ssh/my_server_key
+```
+2. Send ssh to server
+```
+ssh-copy-id -i ~/.ssh/custom_key_name.pub user@server_ip
+```
