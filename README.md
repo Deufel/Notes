@@ -180,49 +180,11 @@ git checkout -b new-branch-name 4f8d768 # Creating a new branch from an old comm
 ### Rolling back to a previous commit
 #### Step 1: Reset to the desired commit
 ```
-git log -1                # Find commit 
-git reset --hard <....>   # Step 1: Roll Back
-git clean -n              # Step 2: Perform a dry run to see what will be removed
-git clean -f              # Step 3: Remove untracked files
-git clean -fd             # Step 4: Remove untracked directories
-git clean -fX             # Optional Step 5: Remove ignored files
-git clean -fdx            # Optional Step 6: Remove all untracked files, directories, and ignored files
-```
-
-### Easy
-
-
-One Line init, add, commit
-```
 git init && git add -A && git commit -m "Initial commit"
-```
-
-Link To a repo
-```
-git remote add origin https://github.com/<username>/<repo>.git
-## This is not a good way to do this ...
-git branch -M master
-git push -u origin master
-```
-
-Abandon all changes and remove all files not explicitly tracked
-```
-git reset --hard HEAD && git clean -fdx
-```
-
-Visual CLI Commit Tree
-```
+git reset --hard origin/main # Roll back to last commit
 git log --oneline --graph --decorate --all
 ```
 
-Note if you put any file in the git hub upon creation it will not like the push; to force it you can
-Force push to the remote repository
-Be CAREFUL when you do this. It will wipe out the remote repo should only be done on set up.
-```
-#----CAUTION
-git push --force origin master
-#----CAUTION
-```
 
 
 ## Useful Terminal (Linux/Mac)
