@@ -5,7 +5,7 @@ Personal Notes / Reminders
 
 ### VENV
 1. make venv
-```
+```zsh
 python3 -mvenv .venv
 ```
 
@@ -13,9 +13,12 @@ python3 -mvenv .venv
 ```
 source ./.venv/bin/activate
 ```
-```
+```zsh
 # install packages pip / pip3
 pip install jupyter matplotlib numpy pandas scipy scikit-learn
+
+# upgrade existing package
+pip install --upgrade <package_name>
 
 # make requirements.txt file
 pip freeze > requirements.txt
