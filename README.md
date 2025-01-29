@@ -1,5 +1,5 @@
 # Notes
-Personal Notes / Reminders
+*from stone age befor llms*
 
 ## Python 
 
@@ -60,25 +60,17 @@ for row in db.execute("SELECT * FROM stats LIMIT 10"): pprint.pprint((dict(row))
 db.execute("CREATE TABLE events(id integer primary key, name text, start_date text, end_date text, description text);")
 ```
 
-### Data Basics
-#### Shuffle data
-```py
-import numpy as np
+### Basic Python
 
+```py
+# Shuffle data
+import numpy as np
 data = np.arange(10)
 
 indicies_permutation = np.random.permutation(len(data))
 shuffled_data = data[indicies_permutation]
-
-print(f"data: \t\t{data}")
-print(f"shuffled: \t{shuffled_data}")
-
-'''
------ OUTPUT -----
-data: 		[0 1 2 3 4 5 6 7 8 9]
-shuffled: 	[2 9 8 1 5 7 3 0 4 6]
-'''
 ```
+
 ### Tensorflow
 #### Utilities
 - One Hot Encode
@@ -107,6 +99,8 @@ y_train = to_categorical(train_labels)
 nbdev_new
 nbdev_preview
 nbdev_prepare
+nbdev_export
+# nbdev_watch... 
 ```
 
 
