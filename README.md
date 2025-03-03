@@ -152,6 +152,7 @@ git push origin master
 
 ### Branching
 ```zsh
+
 git branch "new_feature" # Makes the branch
 git checkout "new_feature" # Moves you over the the branch
 git add -A
@@ -176,11 +177,12 @@ git checkout -b new-branch-name 4f8d768 # Creating a new branch from an old comm
 
 ### Rolling back to a previous commit
 #### Step 1: Reset to the desired commit
-```
+```zsh
+
 git init && git add -A && git commit -m "Initial commit"
 git reset --hard origin/main # Roll back to last commit
-git log --oneline --graph --decorate --all # With Page 
-git --no-pager log --oneline --graph --decorate --all # No page
+git log --oneline --graph --decorate --all                  # With Page
+git --no-pager log --oneline --graph --decorate --all       # No page
 
 ```
 
