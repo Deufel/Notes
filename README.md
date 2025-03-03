@@ -179,7 +179,9 @@ git checkout -b new-branch-name 4f8d768 # Creating a new branch from an old comm
 ```
 git init && git add -A && git commit -m "Initial commit"
 git reset --hard origin/main # Roll back to last commit
-git log --oneline --graph --decorate --all
+git log --oneline --graph --decorate --all # With Page 
+git --no-pager log --oneline --graph --decorate --all # No page
+
 ```
 
 
