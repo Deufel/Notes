@@ -1,5 +1,5 @@
 # Notes
-*from stone age befor llms*
+*from stone age*
 
 ## Python 
 
@@ -188,11 +188,18 @@ git --no-pager log --oneline --graph --decorate --all       # No page
 
 
 
+
 ## Useful Terminal (Linux/Mac)
  - show ssh keys: ```ls -al ~/.ssh```
  - Copy: ```pbcopy < filename.txt```
  - Copy output: ```ls | pbcopy```
- - 
+ - See Files Being used by ports: ``` sudo lsof -i -P | grep LISTEN ```
+ - See files for a specific port: ```sudo lsof -i:5001```
+ - View processes with network activity: ```netstat -anvp tcp | grep LISTEN```
+ - Kill a process: kill -9 <PID>
+ - Kill all process on a known port: ```kill -9 $(sudo lsof -t -i:5001)``` Prop req. sudo CAUTION
+
+
 
 
 ## SSH 
@@ -214,3 +221,4 @@ Host orange
 >> ssh my_server_key # Will log you on
 '''
 ```
+
