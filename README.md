@@ -1,6 +1,12 @@
 # Notes
 *from stone age*
 
+## VIM
+```
+:set wrap
+:set nowrap
+```
+
 ## Python 
 
 ### VENV
