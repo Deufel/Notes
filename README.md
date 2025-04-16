@@ -116,6 +116,9 @@ nbdev_export
 # ARCHIVE
 git fetch origin
 git checkout -b main-backup origin/main
+
+# SAVE
+git add -A && git commit -m "save" && git push 
 ```
 
 ### Basics
