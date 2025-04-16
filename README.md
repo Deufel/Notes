@@ -112,6 +112,12 @@ nbdev_export
 
 ## GIT 
 
+```zsh
+# ARCHIVE
+git fetch origin
+git checkout -b main-backup origin/main
+```
+
 ### Basics
 ```bash
 # Verify installed
