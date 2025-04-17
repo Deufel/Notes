@@ -1,10 +1,14 @@
 # Notes
 *from stone age*
 
-## VIM
+vim
 ```
 :set wrap
 :set nowrap
+```
+python
+```py
+exec(open('my_script.py').read()) #run python script from cli
 ```
 
 ## Python 
