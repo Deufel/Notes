@@ -8,7 +8,7 @@ vim
 ```
 python
 ```py
-exec(open('my_script.py').read()) #run python script from cli
+exec(open('my_script.py').read()) #run python script from shell
 ```
 
 ## Python 
