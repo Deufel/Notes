@@ -236,3 +236,9 @@ Host orange
 '''
 ```
 
+## Linux 
+- Increase font size
+```
+sudo dpkg-reconfigure console-setup
+```
+
