@@ -79,6 +79,10 @@ data = np.arange(10)
 
 indicies_permutation = np.random.permutation(len(data))
 shuffled_data = data[indicies_permutation]
+
+# F-string tricks
+print(f'{n:,}') # 1,000 seperator with ','
+
 ```
 
 ### Tensorflow
