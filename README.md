@@ -83,7 +83,9 @@ shuffled_data = data[indicies_permutation]
 # F-string tricks
 print(f'{n:,}')                 # 1,000s seperator with ',' (can also use _)
 print(f'{n:>20}:')              # Rt align w/ 20 spaces; '<' for left, '^' for center
-print(f'{datetime.now(): %c}')  # Date formatting lots more optins available .. 
+print(f'{datetime.now(): %c}')  # Date formatting lots more optins available ..
+print(f'{n = }')                # Will output "n = ...." much nicer way to check vars
+
 
 ```
 
