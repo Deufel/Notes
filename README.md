@@ -82,6 +82,7 @@ shuffled_data = data[indicies_permutation]
 
 # F-string tricks
 print(f'{n:,}') # 1,000 seperator with ','
+print(f'{n:>20}:') # right align with 20 spaces; '<' for left, '^' for center
 
 ```
 
