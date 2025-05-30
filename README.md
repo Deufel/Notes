@@ -89,6 +89,15 @@ print(f'{n = }')                # Will output "n = ...." much nicer way to check
 
 ```
 
+### Pandas
+
+```py
+pd.set_option('display.max_rows', None)
+
+```
+
+
+
 ### Tensorflow
 #### Utilities
 - One Hot Encode
