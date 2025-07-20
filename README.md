@@ -189,26 +189,25 @@ git push origin master
 ### Branching
 ```zsh
 
-git branch "new_feature" # Makes the branch
-git checkout "new_feature" # Moves you over the the branch
+git switch -c new_feature # Creates and switches to branch
 git add -A
-git commit -m "small_new_feature" # uploads teh change ONLY to the branch
-git push -u origin "new_feature" # slightly complex command that associates the brance with main
-git branch -a # To verify
+git commit -m "small_new_feature" # commits to branch
+git push -u origin new_feature # pushes and sets upstream
+git branch -a # verify branches
 git add -A && git commit -m "small new feature..."
 git push
-# Ready to merge with Master Branch
-git checkout master
+# Ready to merge
+git switch master
 git pull origin master
-git merge "new_feature" # Merges the changes 
-git push origin master # Uploads the changes to remote repo
-#Delete the Branch
-git branch -d "new_feature" # will delete localy
-git push origin --delte "new_feature" # will delete from remote repo
-git branch -s # to verify
-# To go back to an old version and branch off
-git log --graph --oneline --all --decorate # to see all committs # 
-git checkout -b new-branch-name 4f8d768 # Creating a new branch from an old commit
+git merge new_feature # merges changes 
+git push origin master # pushes to remote
+# Delete branch
+git branch -d new_feature # delete locally
+git push origin --delete new_feature # delete from remote
+git branch -a # verify deletion
+# Branch from old commit
+git log --oneline --graph --all # see commits
+git switch -c new-branch-name 4f8d768 # create branch from old commit
 ```
 
 ### Rolling back to a previous commit
