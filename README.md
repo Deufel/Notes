@@ -5,6 +5,9 @@ vim
 ```
 :set wrap
 :set nowrap
+
+:set textwidth=80 #then select section to reformat
+<g>, <q>
 ```
 python
 ```py
