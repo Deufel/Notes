@@ -1,0 +1,559 @@
+# Datastar
+
+> Build reactive web apps that stand the test of time. Datastar is a lightweight framework for building everything from simple sites to real-time collaborative web applications. Bring Your Own Backend. Harness the simplicity of server-side rendering and the power of a frontend framework with a single 10.68 KiB file.
+
+# Quick Introduction
+
+ - Datastar accepts text/html and text/event-stream content types, so you can send regular HTML responses or stream server-sent events (SSE) from the backend.
+    ```Network Response
+    HTTP/2 200 OK
+    Content-Type: text/event-stream
+
+    event: datastar-patch-elements
+    data: <h3 id="message">H</h3>
+
+    event: datastar-patch-elements
+    data: <h3 id="message">He</h3>
+    ```
+ - Datastar solves more problems than it creates
+    1. Unlike most frontend frameworks, Datastar simplifies your frontend logic, shifting state management to the backend.
+    2. Drive your frontend from the backend using HTML attributes and a hypermedia-driven approach.
+
+ - State in the right place: Add reactivity to your frontend using data-* attributes.
+
+    ```html
+    <button data-on-click="@get('/endpoint')">
+        Open the pod bay doors, HAL.
+    </button>
+
+    <div id="hal">Waiting for an order...</div>
+    ```
+
+ - Backend driven frontends: Modify the DOM and state from your backend.
+
+    ```html
+    sse.PatchElements(`
+        <div id="hal">I’m sorry, Dave. I’m afraid I can’t do that.</div>
+    `)
+    time.Sleep(1 * time.Second)
+    sse.PatchElements(`<div id="hal">Waiting for an order...</div>`)
+    ```
+
+
+## Guide: Getting Started
+
+    > Datastar simplifies frontend development – allowing you to build backend-driven, interactive UIs using a hypermedia-first approach.
+    Hypermedia refers to linked content like images, audio, and video – an extension of hypertext (the “H” in HTML and HTTP).
+    Datastar offers backend-driven reactivity like htmx and frontend-driven reactivity like Alpine.js in a lightweight framework that doesn’t need any npm packages or other dependencies. It provides two major functions:
+    Modify the DOM and state by sending events from your backend.
+    Build reactivity into your frontend using HTML attributes.
+
+    ### Installation:
+    The quickest way to use Datastar is to include it using a script tag that fetches it from a CDN.
+    <script type="module" src="https://cdn.jsdelivr.net/gh/starfederation/datastar@main/bundles/datastar.js"></script>
+    If you prefer to host the file yourself, download the script or create your own bundle using the bundler, then include it from the appropriate path.
+
+    <script type="module" src="/path/to/datastar.js"></script>
+
+    ### data-*
+    At the core of Datastar are data-* attributes (hence the name). They allow you to add reactivity to your frontend and interact with your backend in a declarative way.
+    The data-on attribute can be used to attach an event listener to an element and execute an expression whenever the event is triggered. The value of the attribute is a Datastar expression in which JavaScript can be used.
+
+    ```html
+    <button data-on-click="alert('I’m sorry, Dave. I’m afraid I can’t do that.')">
+        Open the pod bay doors, HAL.
+    </button>
+    ```
+
+    ### Patching Elements
+    With Datastar, the backend drives the frontend by patching (adding, updating and removing) HTML elements in the DOM.
+    Datastar receives elements from the backend and manipulates the DOM using a morphing strategy (by default). Morphing ensures that only modified parts of the DOM are updated, preserving state and improving performance.
+    Datastar provides actions for sending requests to the backend. The @get() action sends a GET request to the provided URL using a browser native fetch.
+    ```html
+    <button data-on-click="@get('/endpoint')">
+        Open the pod bay doors, HAL.
+    </button>
+    <div id="hal"></div>
+    ```
+    Actions in Datastar are helper functions that have the syntax @actionName(). Read more about actions in the reference.
+    If the response has a content-type of text/html, the top-level HTML elements will be morphed into the existing DOM based on the element IDs.
+
+    ```html
+    <div id="hal">
+        I’m sorry, Dave. I’m afraid I can’t do that.
+    </div>
+    ```
+    We call this a “Patch Elements” event because multiple elements can be patched into the DOM at once.
+
+    For "Patch Elements" morphing to work the DOM AND the HTML Partial must contain an element with a matching ID. Other patching strategies are available, but morph is the best and simplest choice in most scenarios.
+
+    If the response has a content-type of text/event-stream, it can contain zero or more SSE events. The example above can be replicated using a datastar-patch-elements SSE event.
+
+    SSE patch
+    ```
+    event: datastar-patch-elements
+    data: elements <div id="hal">
+    data: elements     I’m sorry, Dave. I’m afraid I can’t do that.
+    data: elements </div>
+    ```
+
+    Because we can send as many events as we want in a stream, and because it can be a long-lived connection, we can extend the example above to first send HAL’s response and then, after a few seconds, reset the text.
+
+    ```
+    event: datastar-patch-elements
+    data: elements <div id="hal">
+    data: elements     I’m sorry, Dave. I’m afraid I can’t do that.
+    data: elements </div>
+
+    event: datastar-patch-elements
+    data: elements <div id="hal">
+    data: elements     Waiting for an order...
+    data: elements </div>
+    ```
+
+    We’ll cover event streams and SSE events in more detail later in the guide, but as you can see, they are just plain text events with a special syntax, made simpler by the SDKs.
+
+## Guide: Reactive Signals
+
+    Reactive Signals
+    In a hypermedia approach, the backend drives state to the frontend and acts as the primary source of truth. It’s up to the backend to determine what actions the user can take next by patching appropriate elements in the DOM.
+    Sometimes, however, you may need access to frontend state that’s driven by user interactions. Click, input and keydown events are some of the more common user events that you’ll want your frontend to be able to react to.
+    Datastar uses signals to manage frontend state. You can think of signals as reactive variables that automatically track and propagate changes in and to Datastar expressions. Signals are denoted using the $ prefix.
+
+    Data Attributes
+    Datastar allows you to add reactivity to your frontend and interact with your backend in a declarative way using data-* attributes.
+
+    data-bind
+    The data-bind attribute sets up two-way data binding on any HTML element that receives user input or selections. These include input, textarea, select, checkbox and radio elements, as well as web components whose value can be made reactive.
+    ```html
+    <input data-bind-foo />
+    ```
+    This creates a new signal that can be called using $foo, and binds it to the element’s value. If either is changed, the other automatically updates.
+    You can accomplish the same thing passing the signal name as a value, an alternate syntax that might be more useful for some templating languages:
+    ```html
+    <input data-bind="foo" />
+    ```
+
+    data-text
+    The data-text attribute sets the text content of an element to the value of a signal. The $ prefix is required to denote a signal.
+    ```html
+    <input data-bind-foo />
+    <div data-text="$foo"></div>
+    ```
+    The value of the data-text attribute is a Datastar expression that is evaluated, meaning that we can use JavaScript in it.
+    ```html
+    <input data-bind-foo />
+    <div data-text="$foo.toUpperCase()"></div>
+    ```
+
+    data-computed
+    The data-computed attribute creates a new signal that is derived from a reactive expression. The computed signal is read-only, and its value is automatically updated when any signals in the expression are updated.
+    ```html
+    <input data-bind-foo />
+    <div data-computed-repeated="$foo.repeat(2)" data-text="$repeated"></div>
+    ```
+    This results in the $repeated signal’s value always being equal to the value of the $foo signal repeated twice. Computed signals are useful for memoizing expressions containing other signals.
+
+    data-show
+    The data-show attribute can be used to show or hide an element based on whether an expression evaluates to true or false.
+    ```html
+    <input data-bind-foo />
+    <button data-show="$foo != ''">Save</button>
+    ```
+    This results in the button being visible only when the input value is not an empty string. This could also be shortened to ```data-show="!$foo"```.
+
+    data-class
+    The data-class attribute allows us to add or remove an element’s class based on an expression.
+    ```html
+    <input data-bind-foo />
+    <button data-class-success="$foo != ''">
+        Save
+    </button>
+    ```
+    If the expression evaluates to true, the success class is added to the element; otherwise, it is removed.
+    The data-class attribute can also be used to add or remove multiple classes from an element using a set of key-value pairs, where the keys represent class names and the values represent expressions.
+    ```html
+    <button data-class="{success: $foo != '', 'font-bold': $foo == 'bar'}">
+        Save
+    </button>
+    ```
+
+    data-attr
+    The data-attr attribute can be used to bind the value of any HTML attribute to an expression.
+    ```html
+    <input data-bind-foo />
+    <button data-attr-disabled="$foo == ''">
+        Save
+    </button>
+    ```
+    This results in a disabled attribute being given the value true whenever the input is an empty string.
+    The data-attr attribute can also be used to set the values of multiple attributes on an element using a set of key-value pairs, where the keys represent attribute names and the values represent expressions.
+    ```html
+    <button data-attr="{disabled: $foo == '', title: $foo}">Save</button>
+    ```
+
+    data-signals
+    Signals are globally accessible from anywhere in the DOM. So far, we’ve created signals on the fly using data-bind and data-computed. If a signal is used without having been created, it will be created automatically and its value set to an empty string.
+    Another way to create signals is using the data-signals attribute, which patches (adds, updates or removes) one or more signals into the existing signals.
+    ```html
+    <div data-signals-foo="1"></div>
+    ```
+    Signals can be nested using dot-notation.
+    ```html
+    <div data-signals-form.foo="2"></div>
+    ```
+    The data-signals attribute can also be used to patch multiple signals using a set of key-value pairs, where the keys represent signal names and the values represent expressions.
+
+    ```html
+    <div data-signals="{foo: 1, form: {foo: 2}}"></div>
+    ```
+
+    data-on
+    The data-on attribute can be used to attach an event listener to an element and run an expression whenever the event is triggered.
+    ```html
+    <input data-bind-foo />
+    <button data-on-click="$foo = ''">
+        Reset
+    </button>
+    ```
+    This results in the $foo signal’s value being set to an empty string whenever the button element is clicked. This can be used with any valid event name such as data-on-keydown, data-on-mouseover, etc. Custom events may also be used.
+    *These are just some of the attributes available in Datastar. For a complete list, see the attribute reference*
+
+    Frontend Reactivity
+    Datastar’s data attributes enable declarative signals and expressions, providing a simple yet powerful way to add reactivity to the frontend.
+    Datastar expressions are strings that are evaluated by Datastar attributes and actions. While they are similar to JavaScript, there are some important differences that are explained in the next section of the guide.
+    ```html
+    <div data-signals-hal="'...'">
+        <button data-on-click="$hal = 'Affirmative, Dave. I read you.'">
+            HAL, do you read me?
+        </button>
+        <div data-text="$hal"></div>
+    </div>
+    ```
+
+    Patching Signals
+    Remember that in a hypermedia approach, the backend drives state to the frontend. Just like with elements, frontend signals can be patched (added, updated and removed) from the backend using backend actions.
+
+    ```html
+    <div data-signals-hal="'...'">
+        <button data-on-click="@get('/endpoint')">
+            HAL, do you read me?
+        </button>
+        <div data-text="$hal"></div>
+    </div>
+    ```
+    If a response has a content-type of application/json, the signal values are patched into the frontend signals.
+    We call this a “Patch Signals” event because multiple signals can be patched (using JSON Merge Patch RFC 7396) into the existing signals.
+        {"hal": "Affirmative, Dave. I read you."}
+    If the response has a content-type of text/event-stream, it can contain zero or more SSE events. The example above can be replicated using a datastar-patch-signals SSE event.
+
+    ```SSE
+    event: datastar-patch-signals
+    data: signals {hal: 'Affirmative, Dave. I read you.'}
+    ```
+    Because we can send as many events as we want in a stream, and because it can be a long-lived connection, we can extend the example above to first set the hal signal to an “affirmative” response and then, after a second, reset the signal.
+    ```SSE
+    event: datastar-patch-signals
+    data: signals {hal: 'Affirmative, Dave. I read you.'}
+
+    // Wait 1 second
+
+    event: datastar-patch-signals
+    data: signals {hal: '...'}
+    ```
+
+## Guide: Datastar Expressions
+    Datastar expressions are strings that are evaluated by data-* attributes. While they are similar to JavaScript, there are some important differences that make them more powerful for declarative hypermedia applications.
+    The following example outputs 1 because we’ve defined `foo` as a signal with the initial value 1, and are using `$foo` in a data-* attribute.
+    ```html
+    <div data-signals-foo="1">
+        <div data-text="$foo"></div>
+    </div>
+    ```
+    A variable `el` is available in every Datastar expression, representing the element that the attribute is attached to.
+
+    ```html
+    <div id="foo" data-text="el.id"></div>
+    ```
+    When Datastar evaluates the expression $foo, it first converts it to the signal value, and then evaluates that expression in a sandboxed context. This means that JavaScript can be used in Datastar expressions.
+
+    ```html
+    <div data-text="$foo.length"></div>
+    ```
+    * JavaScript operators are also available in Datastar expressions. This includes (but is not limited to) the ternary operator ?:, the logical OR operator ||, and the logical AND operator &&. These operators are helpful in keeping Datastar expressions terse. *
+
+    // Output one of two values, depending on the truthiness of a signal
+    ```html
+    <div data-text="$landingGearRetracted ? 'Ready' : 'Waiting'"></div>
+    ```
+    // Show a countdown if the signal is truthy or the time remaining is less than 10 seconds
+    ```html
+    <div data-show="$landingGearRetracted || $timeRemaining < 10">
+        Countdown
+    </div>
+    ```
+    // Only send a request if the signal is truthy
+    ```html
+    <button data-on-click="$landingGearRetracted && @post('/launch')">
+        Launch
+    </button>
+    ```
+    Multiple statements can be used in a single expression by separating them with a semicolon.
+    ```html
+    <div data-signals-foo="1">
+        <button data-on-click="$landingGearRetracted = true; @post('/launch')">
+            Force launch
+        </button>
+    </div>
+    ```
+    Expressions may span multiple lines, but a semicolon must be used to separate statements. * Unlike JavaScript, line breaks alone are not sufficient to separate statements. *
+    ```html
+    <div data-signals-foo="1">
+        <button data-on-click="
+            $landingGearRetracted = true;
+            @post('/launch')
+        ">
+            Force launch
+        </button>
+    </div>
+    ```
+
+    ### Using JavaScript
+     - Most of your JavaScript logic should go in data-* attributes, since reactive signals and actions only work in Datastar expressions.
+    CAUTION: if you find yourself trying to do too much in Datastar expressions, you are probably overcomplicating it.
+    TIP: Any additional JavaScript functionality you require that cannot belong in data-* attributes should be extracted out into external scripts or, better yet, web components.
+
+    TIP: Always encapsulate state and send props down, events up.
+
+    ### External Scripts
+    When using external scripts, pass data into functions via arguments and return a result or listen for custom events dispatched from them props down, events up.
+    In this way, the function is encapsulated – all it knows is that it receives input via an argument, acts on it, and optionally returns a result or dispatches a custom event – and data-* attributes can be used to drive reactivity.
+    ```html
+    <div data-signals-result>
+        <input data-bind-foo
+            data-on-input="$result = myfunction($foo)"
+        >
+        <span data-text="$result"></span>
+    </div>
+
+    function myfunction(data) {
+        return `You entered: ${data}`;
+    }
+    ```
+    If your function call is asynchronous then it will need to dispatch a custom event containing the result. IMPORTANT: While asynchronous code can be placed within Datastar expressions, Datastar will not await it.
+
+    ```html
+    <div data-signals-result>
+        <input data-bind-foo
+            data-on-input="myfunction(el, $foo)"
+            data-on-mycustomevent__window="$result = evt.detail.value"
+        >
+        <span data-text="$result"></span>
+    </div>
+
+    async function myfunction(element, data) {
+        const value = await new Promise((resolve) => {
+            setTimeout(() => resolve(`You entered: ${data}`), 1000);
+        });
+        element.dispatchEvent(
+            new CustomEvent('mycustomevent', {detail: {value}})
+        );
+    }
+    ```
+    See the sortable example.
+
+    ### Web Components
+    Web components allow you create reusable, encapsulated, custom elements. They are native to the web and require no external libraries or frameworks. Web components unlock custom elements – HTML tags with custom behavior and styling.
+    When using web components, pass data into them via attributes and listen for custom events dispatched from them (props down, events up).
+    In this way, the web component is encapsulated – all it knows is that it receives input via an attribute, acts on it, and optionally dispatches a custom event containing the result – and data-* attributes can be used to drive reactivity.
+
+    ```html
+    <div data-signals-result="''">
+        <input data-bind-foo />
+        <my-component
+            data-attr-src="$foo"
+            data-on-mycustomevent="$result = evt.detail.value"
+        ></my-component>
+        <span data-text="$result"></span>
+    </div>
+
+    class MyComponent extends HTMLElement {
+        static get observedAttributes() {
+            return ['src'];
+        }
+
+        attributeChangedCallback(name, oldValue, newValue) {
+            const value = `You entered: ${newValue}`;
+            this.dispatchEvent(
+                new CustomEvent('mycustomevent', {detail: {value}})
+            );
+        }
+    }
+
+    customElements.define('my-component', MyComponent);
+    ```
+    Since the value attribute is allowed on web components, it is also possible to use data-bind to bind a signal to the web component’s value. Note that a change event must be dispatched so that the event listener used by data-bind is triggered by the value change.
+
+    See the web component example.
+
+    ### Executing Scripts
+    Just like elements and signals, the backend can also send JavaScript to be executed on the frontend using backend actions.
+    ```html
+    <button data-on-click="@get('/endpoint')">
+        What are you talking about, HAL?
+    </button>
+    ```
+    If a response has a content-type of text/javascript, the value will be executed as JavaScript in the browser.
+
+    ```sse
+    event: datastar-patch-elements
+    data: elements <div id="hal">
+    data: elements     <script>alert('This mission is too important for me to allow you to jeopardize it.')</script>
+    data: elements </div>
+    ```
+    If you only want to execute a script, you can append the script tag to the body.
+
+    ```sse
+    event: datastar-patch-elements
+    data: mode append
+    data: selector body
+    data: elements <script>alert('This mission is too important for me to allow you to jeopardize it.')</script>
+    ```
+    Most SDKs have an ExecuteScript helper function for executing a script. Here’s the code to generate the SSE event above using the Go SDK.
+
+    sse := datastar.NewSSE(writer, request)
+    sse.ExecuteScript(`alert('This mission is too important for me to allow you to jeopardize it.')`)
+
+
+## Guide: Backend Requests
+    Between attributes and actions, Datastar provides you with everything you need to build hypermedia-driven applications. Using this approach, the backend drives state to the frontend and acts as the single source of truth, determining what actions the user can take next.
+
+    ### Sending Signals
+    By default, all signals (except for local signals whose keys begin with an underscore) are sent in an object with every backend request. When using a GET request, the signals are sent as a datastar query parameter, otherwise they are sent as a JSON body.
+
+    By sending all signals in every request, the backend has full access to the frontend state. This is by design. It is not recommended to send partial signals, but if you must, you can use the filterSignals option to filter the signals sent to the backend.
+
+    ### Nesting Signals
+    Signals can be nested, making it easier to target signals in a more granular way on the backend.
+
+    Using dot-notation:
+
+
+    <div data-signals-foo.bar="1"></div>
+    Using object syntax:
+
+
+    <div data-signals="{foo: {bar: 1}}"></div>
+    Using two-way binding:
+
+
+    <input data-bind-foo.bar />
+    A practical use-case of nested signals is when you have repetition of state on a page. The following example tracks the open/closed state of a menu on both desktop and mobile devices, and the toggleAll() action to toggle the state of all menus at once.
+
+
+    <div data-signals="{menu: {isOpen: {desktop: false, mobile: false}}}">
+        <button data-on-click="@toggleAll({include: /^menu\.isOpen\./})">
+            Open/close menu
+        </button>
+    </div>
+
+    ### Reading Signals
+    To read signals from the backend, JSON decode the datastar query param for GET requests, and the request body for all other methods.
+
+    All SDKs provide a helper function to read signals. Here’s how you would use the Go SDK to read the nested signal foo.bar in a request.
+
+
+    import ("github.com/starfederation/datastar-go/datastar")
+
+    type Signals struct {
+        Foo struct {
+            Bar string `json:"bar"`
+        } `json:"foo"`
+    }
+
+    signals := &Signals{}
+    if err := datastar.ReadSignals(request, signals); err != nil {
+        http.Error(w, err.Error(), http.StatusBadRequest)
+        return
+    }
+
+    ### SSE Events
+    Datastar can stream zero or more Server-Sent Events (SSE) from the web server to the browser. There’s no special backend plumbing required to use SSE, just some special syntax. Fortunately, SSE is straightforward and provides us with some advantages, in addition to allowing us to send multiple events in a single response (in contrast to sending text/html or application/json responses).
+
+    First, set up your backend in the language of your choice. Familiarize yourself with sending SSE events, or use one of the backend SDKs to get up and running even faster. We’re going to use the SDKs in the examples below, which set the appropriate headers and format the events for us.
+
+    The following code would exist in a controller action endpoint in your backend.
+
+    ```py
+    from datastar_py import ServerSentEventGenerator as SSE
+    from datastar_py.litestar import DatastarResponse
+
+    async def endpoint():
+        return DatastarResponse([
+            SSE.patch_elements('<div id="question">What do you put in a toaster?</div>'),
+            SSE.patch_signals({"response": "", "answer": "bread"})
+        ])
+    ```
+    The PatchElements() function updates the provided HTML element into the DOM, replacing the element with id="question". An element with the ID question must already exist in the DOM.
+    The PatchSignals() function updates the response and answer signals into the frontend signals.
+    With our backend in place, we can now use the data-on-click attribute to trigger the @get() action, which sends a GET request to the /actions/quiz endpoint on the server when a button is clicked.
+
+    ```html
+    <div
+        data-signals="{response: '', answer: ''}"
+        data-computed-correct="$response.toLowerCase() == $answer"
+    >
+        <div id="question"></div>
+        <button data-on-click="@get('/actions/quiz')">Fetch a question</button>
+        <button
+            data-show="$answer != ''"
+            data-on-click="$response = prompt('Answer:') ?? ''"
+        >
+            BUZZ
+        </button>
+        <div data-show="$response != ''">
+            You answered “<span data-text="$response"></span>”.
+            <span data-show="$correct">That is correct ✅</span>
+            <span data-show="!$correct">
+            The correct answer is “<span data-text="$answer"></span>” 🤷
+            </span>
+        </div>
+    </div>
+    ```
+    Now when the Fetch a question button is clicked, the server will respond with an event to modify the question element in the DOM and an event to modify the response and answer signals. We’re driving state from the backend!
+
+    ### data-indicator
+    The data-indicator attribute sets the value of a signal to true while the request is in flight, otherwise false. We can use this signal to show a loading indicator, which may be desirable for slower responses.
+
+    ```html
+    <div id="question"></div>
+    <button
+        data-on-click="@get('/actions/quiz')"
+        data-indicator-fetching
+    >
+        Fetch a question
+    </button>
+    <div data-class-loading="$fetching" class="indicator"></div>
+    ```
+    ### Backend Actions
+    We’re not limited to sending just GET requests. Datastar provides backend actions for each of the methods available: @get(), @post(), @put(), @patch() and @delete().
+    Here’s how we can send an answer to the server for processing, using a POST request.
+    ```html
+    <button data-on-click="@post('/actions/quiz')">
+        Submit answer
+    </button>
+    ```
+    One of the benefits of using SSE is that we can send multiple events (patch elements and patch signals) in a single response.
+    ```
+    return DatastarResponse([
+        SSE.patch_elements('<div id="question">...</div>'),
+        SSE.patch_elements('<div id="instructions">...</div>'),
+        SSE.patch_signals({"answer": "...", "prize": "..."})
+    ])
+    ```
+    In addition to your browser’s dev tools, the Datastar Inspector can be used to monitor and inspect SSE events received by Datastar.
+    Read more about SSE events in the reference.
+
+    ### Congratulations
+    You’ve actually read the entire guide! You should now know how to use Datastar to build reactive applications that communicate with the backend using backend requests and SSE events.
+    Feel free to dive into the reference and explore the examples next, to learn more about what you can do with Datastar.

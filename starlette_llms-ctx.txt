@@ -1,0 +1,1924 @@
+# Starlette
+
+> Starlette is a lightweight ASGI framework/toolkit, which is ideal for building async web services in Python.
+It is production-ready, and gives you the following:
+
+## Links
+
+    [Documentation](https://www.starlette.io)
+    [Source Code](https://github.com/encode/starlette)
+
+## About
+
+    It is production-ready, and gives you the following:
+
+    - A lightweight, low-complexity HTTP web framework.
+    - WebSocket support.
+    - In-process background tasks.
+    - Startup and shutdown events.
+    - Test client built on httpx.
+    - CORS, GZip, Static Files, Streaming responses.
+    - Session and Cookie support.
+    - 100% test coverage.
+    - 100% type annotated codebase.
+    - Few hard dependencies.
+    - Compatible with asyncio and trio backends.
+    - Great overall performance against independent benchmarks.
+
+## Features: Applications
+
+    Starlette includes an application class Starlette that nicely ties together all of its other functionality.
+
+
+    from contextlib import asynccontextmanager
+
+    from starlette.applications import Starlette
+    from starlette.responses import PlainTextResponse
+    from starlette.routing import Route, Mount, WebSocketRoute
+    from starlette.staticfiles import StaticFiles
+
+
+    def homepage(request):
+        return PlainTextResponse('Hello, world!')
+
+    def user_me(request):
+        username = "John Doe"
+        return PlainTextResponse('Hello, %s!' % username)
+
+    def user(request):
+        username = request.path_params['username']
+        return PlainTextResponse('Hello, %s!' % username)
+
+    async def websocket_endpoint(websocket):
+        await websocket.accept()
+        await websocket.send_text('Hello, websocket!')
+        await websocket.close()
+
+    @asynccontextmanager
+    async def lifespan(app):
+        print('Startup')
+        yield
+        print('Shutdown')
+
+
+    routes = [
+        Route('/', homepage),
+        Route('/user/me', user_me),
+        Route('/user/{username}', user),
+        WebSocketRoute('/ws', websocket_endpoint),
+        Mount('/static', StaticFiles(directory="static")),
+    ]
+
+    app = Starlette(debug=True, routes=routes, lifespan=lifespan)
+    Storing state on the app instance
+    You can store arbitrary extra state on the application instance, using the generic app.state attribute.
+
+    For example:
+
+
+    app.state.ADMIN_EMAIL = 'admin@example.org'
+    Accessing the app instance
+    Where a request is available (i.e. endpoints and middleware), the app is available on request.app.
+
+## Features: Requests
+
+    Starlette includes a Request class that gives you a nicer interface onto the incoming request, rather than accessing the ASGI scope and receive channel directly.
+
+    Request
+    Signature: Request(scope, receive=None)
+
+
+    from starlette.requests import Request
+    from starlette.responses import Response
+
+
+    async def app(scope, receive, send):
+        assert scope['type'] == 'http'
+        request = Request(scope, receive)
+        content = '%s %s' % (request.method, request.url.path)
+        response = Response(content, media_type='text/plain')
+        await response(scope, receive, send)
+    Requests present a mapping interface, so you can use them in the same way as a scope.
+
+    For instance: request['path'] will return the ASGI path.
+
+    If you don't need to access the request body you can instantiate a request without providing an argument to receive.
+
+    Method
+    The request method is accessed as request.method.
+
+    URL
+    The request URL is accessed as request.url.
+
+    The property is a string-like object that exposes all the components that can be parsed out of the URL.
+
+    For example: request.url.path, request.url.port, request.url.scheme.
+
+    Headers
+    Headers are exposed as an immutable, case-insensitive, multi-dict.
+
+    For example: request.headers['content-type']
+
+    Query Parameters
+    Query parameters are exposed as an immutable multi-dict.
+
+    For example: request.query_params['search']
+
+    Path Parameters
+    Router path parameters are exposed as a dictionary interface.
+
+    For example: request.path_params['username']
+
+    Client Address
+    The client's remote address is exposed as a named two-tuple request.client (or None).
+
+    The hostname or IP address: request.client.host
+
+    The port number from which the client is connecting: request.client.port
+
+    Cookies
+    Cookies are exposed as a regular dictionary interface.
+
+    For example: request.cookies.get('mycookie')
+
+    Cookies are ignored in case of an invalid cookie. (RFC2109)
+
+    Body
+    There are a few different interfaces for returning the body of the request:
+
+    The request body as bytes: await request.body()
+
+    The request body, parsed as form data or multipart: async with request.form() as form:
+
+    The request body, parsed as JSON: await request.json()
+
+    You can also access the request body as a stream, using the async for syntax:
+
+
+    from starlette.requests import Request
+    from starlette.responses import Response
+
+
+    async def app(scope, receive, send):
+        assert scope['type'] == 'http'
+        request = Request(scope, receive)
+        body = b''
+        async for chunk in request.stream():
+            body += chunk
+        response = Response(body, media_type='text/plain')
+        await response(scope, receive, send)
+    If you access .stream() then the byte chunks are provided without storing the entire body to memory. Any subsequent calls to .body(), .form(), or .json() will raise an error.
+
+    In some cases such as long-polling, or streaming responses you might need to determine if the client has dropped the connection. You can determine this state with disconnected = await request.is_disconnected().
+
+    Request Files
+    Request files are normally sent as multipart form data (multipart/form-data).
+
+    Signature: request.form(max_files=1000, max_fields=1000, max_part_size=1024*1024)
+
+    You can configure the number of maximum fields or files with the parameters max_files and max_fields; and part size using max_part_size:
+
+
+    async with request.form(max_files=1000, max_fields=1000, max_part_size=1024*1024):
+        ...
+    Info
+
+    These limits are for security reasons, allowing an unlimited number of fields or files could lead to a denial of service attack by consuming a lot of CPU and memory parsing too many empty fields.
+
+    When you call async with request.form() as form you receive a starlette.datastructures.FormData which is an immutable multidict, containing both file uploads and text input. File upload items are represented as instances of starlette.datastructures.UploadFile.
+
+    UploadFile has the following attributes:
+
+    filename: An str with the original file name that was uploaded or None if its not available (e.g. myimage.jpg).
+    content_type: An str with the content type (MIME type / media type) or None if it's not available (e.g. image/jpeg).
+    file: A SpooledTemporaryFile (a file-like object). This is the actual Python file that you can pass directly to other functions or libraries that expect a "file-like" object.
+    headers: A Headers object. Often this will only be the Content-Type header, but if additional headers were included in the multipart field they will be included here. Note that these headers have no relationship with the headers in Request.headers.
+    size: An int with uploaded file's size in bytes. This value is calculated from request's contents, making it better choice to find uploaded file's size than Content-Length header. None if not set.
+    UploadFile has the following async methods. They all call the corresponding file methods underneath (using the internal SpooledTemporaryFile).
+
+    async write(data): Writes data (bytes) to the file.
+    async read(size): Reads size (int) bytes of the file.
+    async seek(offset): Goes to the byte position offset (int) in the file.
+    E.g., await myfile.seek(0) would go to the start of the file.
+    async close(): Closes the file.
+    As all these methods are async methods, you need to "await" them.
+
+    For example, you can get the file name and the contents with:
+
+
+    async with request.form() as form:
+        filename = form["upload_file"].filename
+        contents = await form["upload_file"].read()
+    Info
+
+    As settled in RFC-7578: 4.2, form-data content part that contains file assumed to have name and filename fields in Content-Disposition header: Content-Disposition: form-data; name="user"; filename="somefile". Though filename field is optional according to RFC-7578, it helps Starlette to differentiate which data should be treated as file. If filename field was supplied, UploadFile object will be created to access underlying file, otherwise form-data part will be parsed and available as a raw string.
+
+    Application
+    The originating Starlette application can be accessed via request.app.
+
+    Other state
+    If you want to store additional information on the request you can do so using request.state.
+
+    For example:
+
+    request.state.time_started = time.time()
+
+## Fetures: Responses
+
+    Starlette includes a few response classes that handle sending back the appropriate ASGI messages on the send channel.
+
+    Response
+    Signature: Response(content, status_code=200, headers=None, media_type=None)
+
+    content - A string or bytestring.
+    status_code - An integer HTTP status code.
+    headers - A dictionary of strings.
+    media_type - A string giving the media type. eg. "text/html"
+    Starlette will automatically include a Content-Length header. It will also include a Content-Type header, based on the media_type and appending a charset for text types, unless a charset has already been specified in the media_type.
+
+    Once you've instantiated a response, you can send it by calling it as an ASGI application instance.
+
+
+    from starlette.responses import Response
+
+
+    async def app(scope, receive, send):
+        assert scope['type'] == 'http'
+        response = Response('Hello, world!', media_type='text/plain')
+        await response(scope, receive, send)
+    Set Cookie
+    Starlette provides a set_cookie method to allow you to set cookies on the response object.
+
+    Signature: Response.set_cookie(key, value, max_age=None, expires=None, path="/", domain=None, secure=False, httponly=False, samesite="lax", partitioned=False)
+
+    key - A string that will be the cookie's key.
+    value - A string that will be the cookie's value.
+    max_age - An integer that defines the lifetime of the cookie in seconds. A negative integer or a value of 0 will discard the cookie immediately. Optional
+    expires - Either an integer that defines the number of seconds until the cookie expires, or a datetime. Optional
+    path - A string that specifies the subset of routes to which the cookie will apply. Optional
+    domain - A string that specifies the domain for which the cookie is valid. Optional
+    secure - A bool indicating that the cookie will only be sent to the server if request is made using SSL and the HTTPS protocol. Optional
+    httponly - A bool indicating that the cookie cannot be accessed via JavaScript through Document.cookie property, the XMLHttpRequest or Request APIs. Optional
+    samesite - A string that specifies the samesite strategy for the cookie. Valid values are 'lax', 'strict' and 'none'. Defaults to 'lax'. Optional
+    partitioned - A bool that indicates to user agents that these cross-site cookies should only be available in the same top-level context that the cookie was first set in. Only available for Python 3.14+, otherwise an error will be raised. Optional
+    Delete Cookie
+    Conversely, Starlette also provides a delete_cookie method to manually expire a set cookie.
+
+    Signature: Response.delete_cookie(key, path='/', domain=None)
+
+    HTMLResponse
+    Takes some text or bytes and returns an HTML response.
+
+
+    from starlette.responses import HTMLResponse
+
+
+    async def app(scope, receive, send):
+        assert scope['type'] == 'http'
+        response = HTMLResponse('<html><body><h1>Hello, world!</h1></body></html>')
+        await response(scope, receive, send)
+    PlainTextResponse
+    Takes some text or bytes and returns a plain text response.
+
+
+    from starlette.responses import PlainTextResponse
+
+
+    async def app(scope, receive, send):
+        assert scope['type'] == 'http'
+        response = PlainTextResponse('Hello, world!')
+        await response(scope, receive, send)
+    JSONResponse
+    Takes some data and returns an application/json encoded response.
+
+
+    from starlette.responses import JSONResponse
+
+
+    async def app(scope, receive, send):
+        assert scope['type'] == 'http'
+        response = JSONResponse({'hello': 'world'})
+        await response(scope, receive, send)
+    Custom JSON serialization
+    If you need fine-grained control over JSON serialization, you can subclass JSONResponse and override the render method.
+
+    For example, if you wanted to use a third-party JSON library such as orjson:
+
+
+    from typing import Any
+
+    import orjson
+    from starlette.responses import JSONResponse
+
+
+    class OrjsonResponse(JSONResponse):
+        def render(self, content: Any) -> bytes:
+            return orjson.dumps(content)
+    In general you probably want to stick with JSONResponse by default unless you are micro-optimising a particular endpoint or need to serialize non-standard object types.
+
+    RedirectResponse
+    Returns an HTTP redirect. Uses a 307 status code by default.
+
+
+    from starlette.responses import PlainTextResponse, RedirectResponse
+
+
+    async def app(scope, receive, send):
+        assert scope['type'] == 'http'
+        if scope['path'] != '/':
+            response = RedirectResponse(url='/')
+        else:
+            response = PlainTextResponse('Hello, world!')
+        await response(scope, receive, send)
+    StreamingResponse
+    Takes an async generator or a normal generator/iterator and streams the response body.
+
+
+    from starlette.responses import StreamingResponse
+    import asyncio
+
+
+    async def slow_numbers(minimum, maximum):
+        yield '<html><body><ul>'
+        for number in range(minimum, maximum + 1):
+            yield '<li>%d</li>' % number
+            await asyncio.sleep(0.5)
+        yield '</ul></body></html>'
+
+
+    async def app(scope, receive, send):
+        assert scope['type'] == 'http'
+        generator = slow_numbers(1, 10)
+        response = StreamingResponse(generator, media_type='text/html')
+        await response(scope, receive, send)
+    Have in mind that file-like objects (like those created by open()) are normal iterators. So, you can return them directly in a StreamingResponse.
+
+    FileResponse
+    Asynchronously streams a file as the response.
+
+    Takes a different set of arguments to instantiate than the other response types:
+
+    path - The filepath to the file to stream.
+    headers - Any custom headers to include, as a dictionary.
+    media_type - A string giving the media type. If unset, the filename or path will be used to infer a media type.
+    filename - If set, this will be included in the response Content-Disposition.
+    content_disposition_type - will be included in the response Content-Disposition. Can be set to "attachment" (default) or "inline".
+    File responses will include appropriate Content-Length, Last-Modified and ETag headers.
+
+
+    from starlette.responses import FileResponse
+
+
+    async def app(scope, receive, send):
+        assert scope['type'] == 'http'
+        response = FileResponse('statics/favicon.ico')
+        await response(scope, receive, send)
+    File responses also supports HTTP range requests.
+
+    The Accept-Ranges: bytes header will be included in the response if the file exists. For now, only the bytes range unit is supported.
+
+    If the request includes a Range header, and the file exists, the response will be a 206 Partial Content response with the requested range of bytes. If the range is invalid, the response will be a 416 Range Not Satisfiable response.
+
+    Third party responses
+    EventSourceResponse
+    A response class that implements Server-Sent Events. It enables event streaming from the server to the client without the complexity of websockets.
+
+## Features: Routing
+
+
+    Routing
+    HTTP Routing
+    Starlette has a simple but capable request routing system. A routing table is defined as a list of routes, and passed when instantiating the application.
+
+
+    from starlette.applications import Starlette
+    from starlette.responses import PlainTextResponse
+    from starlette.routing import Route
+
+
+    async def homepage(request):
+        return PlainTextResponse("Homepage")
+
+    async def about(request):
+        return PlainTextResponse("About")
+
+
+    routes = [
+        Route("/", endpoint=homepage),
+        Route("/about", endpoint=about),
+    ]
+
+    app = Starlette(routes=routes)
+    The endpoint argument can be one of:
+
+    A regular function or async function, which accepts a single request argument and which should return a response.
+    A class that implements the ASGI interface, such as Starlette's HTTPEndpoint.
+    Path Parameters
+    Paths can use URI templating style to capture path components.
+
+
+    Route('/users/{username}', user)
+    By default this will capture characters up to the end of the path or the next /.
+    You can use convertors to modify what is captured. The available convertors are:
+
+    str returns a string, and is the default.
+    int returns a Python integer.
+    float returns a Python float.
+    uuid return a Python uuid.UUID instance.
+    path returns the rest of the path, including any additional / characters.
+    Convertors are used by prefixing them with a colon, like so:
+
+
+    Route('/users/{user_id:int}', user)
+    Route('/floating-point/{number:float}', floating_point)
+    Route('/uploaded/{rest_of_path:path}', uploaded)
+    If you need a different converter that is not defined, you can create your own. See below an example on how to create a datetime convertor, and how to register it:
+
+
+    from datetime import datetime
+
+    from starlette.convertors import Convertor, register_url_convertor
+
+
+    class DateTimeConvertor(Convertor):
+        regex = "[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(.[0-9]+)?"
+
+        def convert(self, value: str) -> datetime:
+            return datetime.strptime(value, "%Y-%m-%dT%H:%M:%S")
+
+        def to_string(self, value: datetime) -> str:
+            return value.strftime("%Y-%m-%dT%H:%M:%S")
+
+    register_url_convertor("datetime", DateTimeConvertor())
+    After registering it, you'll be able to use it as:
+
+
+    Route('/history/{date:datetime}', history)
+    Path parameters are made available in the request, as the request.path_params dictionary.
+
+
+    async def user(request):
+        user_id = request.path_params['user_id']
+        ...
+    Handling HTTP methods
+    Routes can also specify which HTTP methods are handled by an endpoint:
+
+
+    Route('/users/{user_id:int}', user, methods=["GET", "POST"])
+    By default function endpoints will only accept GET requests, unless specified.
+
+    Submounting routes
+    In large applications you might find that you want to break out parts of the routing table, based on a common path prefix.
+
+
+    routes = [
+        Route('/', homepage),
+        Mount('/users', routes=[
+            Route('/', users, methods=['GET', 'POST']),
+            Route('/{username}', user),
+        ])
+    ]
+    This style allows you to define different subsets of the routing table in different parts of your project.
+
+
+    from myproject import users, auth
+
+    routes = [
+        Route('/', homepage),
+        Mount('/users', routes=users.routes),
+        Mount('/auth', routes=auth.routes),
+    ]
+    You can also use mounting to include sub-applications within your Starlette application. For example...
+
+
+    # This is a standalone static files server:
+    app = StaticFiles(directory="static")
+
+    # This is a static files server mounted within a Starlette application,
+    # underneath the "/static" path.
+    routes = [
+        ...
+        Mount("/static", app=StaticFiles(directory="static"), name="static")
+    ]
+
+    app = Starlette(routes=routes)
+    Reverse URL lookups
+    You'll often want to be able to generate the URL for a particular route, such as in cases where you need to return a redirect response.
+
+    Signature: url_for(name, **path_params) -> URL
+
+    routes = [
+        Route("/", homepage, name="homepage")
+    ]
+
+    # We can use the following to return a URL...
+    url = request.url_for("homepage")
+    URL lookups can include path parameters...
+
+
+    routes = [
+        Route("/users/{username}", user, name="user_detail")
+    ]
+
+    # We can use the following to return a URL...
+    url = request.url_for("user_detail", username=...)
+    If a Mount includes a name, then submounts should use a {prefix}:{name} style for reverse URL lookups.
+
+
+    routes = [
+        Mount("/users", name="users", routes=[
+            Route("/", user, name="user_list"),
+            Route("/{username}", user, name="user_detail")
+        ])
+    ]
+
+    # We can use the following to return URLs...
+    url = request.url_for("users:user_list")
+    url = request.url_for("users:user_detail", username=...)
+    Mounted applications may include a path=... parameter.
+
+
+    routes = [
+        ...
+        Mount("/static", app=StaticFiles(directory="static"), name="static")
+    ]
+
+    # We can use the following to return URLs...
+    url = request.url_for("static", path="/css/base.css")
+    For cases where there is no request instance, you can make reverse lookups against the application, although these will only return the URL path.
+
+
+    url = app.url_path_for("user_detail", username=...)
+    Host-based routing
+    If you want to use different routes for the same path based on the Host header.
+
+    Note that port is removed from the Host header when matching. For example, Host (host='example.org:3600', ...) will be processed even if the Host header contains or does not contain a port other than 3600 (example.org:5600, example.org). Therefore, you can specify the port if you need it for use in url_for.
+
+    There are several ways to connect host-based routes to your application
+
+
+    site = Router()  # Use eg. `@site.route()` to configure this.
+    api = Router()  # Use eg. `@api.route()` to configure this.
+    news = Router()  # Use eg. `@news.route()` to configure this.
+
+    routes = [
+        Host('api.example.org', api, name="site_api")
+    ]
+
+    app = Starlette(routes=routes)
+
+    app.host('www.example.org', site, name="main_site")
+
+    news_host = Host('news.example.org', news)
+    app.router.routes.append(news_host)
+    URL lookups can include host parameters just like path parameters
+
+
+    routes = [
+        Host("{subdomain}.example.org", name="sub", app=Router(routes=[
+            Mount("/users", name="users", routes=[
+                Route("/", user, name="user_list"),
+                Route("/{username}", user, name="user_detail")
+            ])
+        ]))
+    ]
+    ...
+    url = request.url_for("sub:users:user_detail", username=..., subdomain=...)
+    url = request.url_for("sub:users:user_list", subdomain=...)
+    Route priority
+    Incoming paths are matched against each Route in order.
+
+    In cases where more that one route could match an incoming path, you should take care to ensure that more specific routes are listed before general cases.
+
+    For example:
+
+
+    # Don't do this: `/users/me` will never match incoming requests.
+    routes = [
+        Route('/users/{username}', user),
+        Route('/users/me', current_user),
+    ]
+
+    # Do this: `/users/me` is tested first.
+    routes = [
+        Route('/users/me', current_user),
+        Route('/users/{username}', user),
+    ]
+    Working with Router instances
+    If you're working at a low-level you might want to use a plain Router instance, rather that creating a Starlette application. This gives you a lightweight ASGI application that just provides the application routing, without wrapping it up in any middleware.
+
+
+    app = Router(routes=[
+        Route('/', homepage),
+        Mount('/users', routes=[
+            Route('/', users, methods=['GET', 'POST']),
+            Route('/{username}', user),
+        ])
+    ])
+    WebSocket Routing
+    When working with WebSocket endpoints, you should use WebSocketRoute instead of the usual Route.
+
+    Path parameters, and reverse URL lookups for WebSocketRoute work the the same as HTTP Route, which can be found in the HTTP Route section above.
+
+
+    from starlette.applications import Starlette
+    from starlette.routing import WebSocketRoute
+
+
+    async def websocket_index(websocket):
+        await websocket.accept()
+        await websocket.send_text("Hello, websocket!")
+        await websocket.close()
+
+
+    async def websocket_user(websocket):
+        name = websocket.path_params["name"]
+        await websocket.accept()
+        await websocket.send_text(f"Hello, {name}")
+        await websocket.close()
+
+
+    routes = [
+        WebSocketRoute("/", endpoint=websocket_index),
+        WebSocketRoute("/{name}", endpoint=websocket_user),
+    ]
+
+    app = Starlette(routes=routes)
+    The endpoint argument can be one of:
+
+    An async function, which accepts a single websocket argument.
+    A class that implements the ASGI interface, such as Starlette's WebSocketEndpoint.
+
+## Features: Endpoints
+
+    Endpoints
+    Starlette includes the classes HTTPEndpoint and WebSocketEndpoint that provide a class-based view pattern for handling HTTP method dispatching and WebSocket sessions.
+
+    HTTPEndpoint
+    The HTTPEndpoint class can be used as an ASGI application:
+
+
+    from starlette.responses import PlainTextResponse
+    from starlette.endpoints import HTTPEndpoint
+
+
+    class App(HTTPEndpoint):
+        async def get(self, request):
+            return PlainTextResponse(f"Hello, world!")
+    If you're using a Starlette application instance to handle routing, you can dispatch to an HTTPEndpoint class. Make sure to dispatch to the class itself, rather than to an instance of the class:
+
+
+    from starlette.applications import Starlette
+    from starlette.responses import PlainTextResponse
+    from starlette.endpoints import HTTPEndpoint
+    from starlette.routing import Route
+
+
+    class Homepage(HTTPEndpoint):
+        async def get(self, request):
+            return PlainTextResponse(f"Hello, world!")
+
+
+    class User(HTTPEndpoint):
+        async def get(self, request):
+            username = request.path_params['username']
+            return PlainTextResponse(f"Hello, {username}")
+
+    routes = [
+        Route("/", Homepage),
+        Route("/{username}", User)
+    ]
+
+    app = Starlette(routes=routes)
+    HTTP endpoint classes will respond with "405 Method not allowed" responses for any request methods which do not map to a corresponding handler.
+
+    WebSocketEndpoint
+    The WebSocketEndpoint class is an ASGI application that presents a wrapper around the functionality of a WebSocket instance.
+
+    The ASGI connection scope is accessible on the endpoint instance via .scope and has an attribute encoding which may optionally be set, in order to validate the expected websocket data in the on_receive method.
+
+    The encoding types are:
+
+    'json'
+    'bytes'
+    'text'
+    There are three overridable methods for handling specific ASGI websocket message types:
+
+    async def on_connect(websocket, **kwargs)
+    async def on_receive(websocket, data)
+    async def on_disconnect(websocket, close_code)
+
+    from starlette.endpoints import WebSocketEndpoint
+
+
+    class App(WebSocketEndpoint):
+        encoding = 'bytes'
+
+        async def on_connect(self, websocket):
+            await websocket.accept()
+
+        async def on_receive(self, websocket, data):
+            await websocket.send_bytes(b"Message: " + data)
+
+        async def on_disconnect(self, websocket, close_code):
+            pass
+    The WebSocketEndpoint can also be used with the Starlette application class:
+
+
+    import uvicorn
+    from starlette.applications import Starlette
+    from starlette.endpoints import WebSocketEndpoint, HTTPEndpoint
+    from starlette.responses import HTMLResponse
+    from starlette.routing import Route, WebSocketRoute
+
+
+    html = """
+    <!DOCTYPE html>
+    <html>
+        <head>
+            <title>Chat</title>
+        </head>
+        <body>
+            <h1>WebSocket Chat</h1>
+            <form action="" onsubmit="sendMessage(event)">
+                <input type="text" id="messageText" autocomplete="off"/>
+                <button>Send</button>
+            </form>
+            <ul id='messages'>
+            </ul>
+            <script>
+                var ws = new WebSocket("ws://localhost:8000/ws");
+                ws.onmessage = function(event) {
+                    var messages = document.getElementById('messages')
+                    var message = document.createElement('li')
+                    var content = document.createTextNode(event.data)
+                    message.appendChild(content)
+                    messages.appendChild(message)
+                };
+                function sendMessage(event) {
+                    var input = document.getElementById("messageText")
+                    ws.send(input.value)
+                    input.value = ''
+                    event.preventDefault()
+                }
+            </script>
+        </body>
+    </html>
+    """
+
+    class Homepage(HTTPEndpoint):
+        async def get(self, request):
+            return HTMLResponse(html)
+
+    class Echo(WebSocketEndpoint):
+        encoding = "text"
+
+        async def on_receive(self, websocket, data):
+            await websocket.send_text(f"Message text was: {data}")
+
+    routes = [
+        Route("/", Homepage),
+        WebSocketRoute("/ws", Echo)
+    ]
+
+    app = Starlette(routes=routes)
+
+## Features: Middleware
+
+    Middleware
+    Starlette includes several middleware classes for adding behavior that is applied across your entire application. These are all implemented as standard ASGI middleware classes, and can be applied either to Starlette or to any other ASGI application.
+
+    Using middleware
+    The Starlette application class allows you to include the ASGI middleware in a way that ensures that it remains wrapped by the exception handler.
+
+
+    from starlette.applications import Starlette
+    from starlette.middleware import Middleware
+    from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
+    from starlette.middleware.trustedhost import TrustedHostMiddleware
+
+    routes = ...
+
+    # Ensure that all requests include an 'example.com' or
+    # '*.example.com' host header, and strictly enforce https-only access.
+    middleware = [
+        Middleware(
+            TrustedHostMiddleware,
+            allowed_hosts=['example.com', '*.example.com'],
+        ),
+        Middleware(HTTPSRedirectMiddleware)
+    ]
+
+    app = Starlette(routes=routes, middleware=middleware)
+    Every Starlette application automatically includes two pieces of middleware by default:
+
+    ServerErrorMiddleware - Ensures that application exceptions may return a custom 500 page, or display an application traceback in DEBUG mode. This is always the outermost middleware layer.
+    ExceptionMiddleware - Adds exception handlers, so that particular types of expected exception cases can be associated with handler functions. For example raising HTTPException(status_code=404) within an endpoint will end up rendering a custom 404 page.
+    Middleware is evaluated from top-to-bottom, so the flow of execution in our example application would look like this:
+
+    Middleware
+    ServerErrorMiddleware
+    TrustedHostMiddleware
+    HTTPSRedirectMiddleware
+    ExceptionMiddleware
+    Routing
+    Endpoint
+    The following middleware implementations are available in the Starlette package:
+
+    CORSMiddleware
+    Adds appropriate CORS headers to outgoing responses in order to allow cross-origin requests from browsers.
+
+    The default parameters used by the CORSMiddleware implementation are restrictive by default, so you'll need to explicitly enable particular origins, methods, or headers, in order for browsers to be permitted to use them in a Cross-Domain context.
+
+
+    from starlette.applications import Starlette
+    from starlette.middleware import Middleware
+    from starlette.middleware.cors import CORSMiddleware
+
+    routes = ...
+
+    middleware = [
+        Middleware(CORSMiddleware, allow_origins=['*'])
+    ]
+
+    app = Starlette(routes=routes, middleware=middleware)
+    The following arguments are supported:
+
+    allow_origins - A list of origins that should be permitted to make cross-origin requests. eg. ['https://example.org', 'https://www.example.org']. You can use ['*'] to allow any origin.
+    allow_origin_regex - A regex string to match against origins that should be permitted to make cross-origin requests. eg. 'https://.*\.example\.org'.
+    allow_methods - A list of HTTP methods that should be allowed for cross-origin requests. Defaults to ['GET']. You can use ['*'] to allow all standard methods.
+    allow_headers - A list of HTTP request headers that should be supported for cross-origin requests. Defaults to []. You can use ['*'] to allow all headers. The Accept, Accept-Language, Content-Language and Content-Type headers are always allowed for CORS requests.
+    allow_credentials - Indicate that cookies should be supported for cross-origin requests. Defaults to False. Also, allow_origins, allow_methods and allow_headers cannot be set to ['*'] for credentials to be allowed, all of them must be explicitly specified.
+    expose_headers - Indicate any response headers that should be made accessible to the browser. Defaults to [].
+    max_age - Sets a maximum time in seconds for browsers to cache CORS responses. Defaults to 600.
+    The middleware responds to two particular types of HTTP request...
+
+    CORS preflight requests
+    These are any OPTIONS request with Origin and Access-Control-Request-Method headers. In this case the middleware will intercept the incoming request and respond with appropriate CORS headers, and either a 200 or 400 response for informational purposes.
+
+    Simple requests
+    Any request with an Origin header. In this case the middleware will pass the request through as normal, but will include appropriate CORS headers on the response.
+
+    CORSMiddleware Global Enforcement
+    When using CORSMiddleware with your Starlette application, it's important to ensure that CORS headers are applied even to error responses generated by unhandled exceptions. The recommended solution is to wrap the entire Starlette application with CORSMiddleware. This approach guarantees that even if an exception is caught by ServerErrorMiddleware (or other outer error-handling middleware), the response will still include the proper Access-Control-Allow-Origin header.
+
+    For example, instead of adding CORSMiddleware as an inner middleware via the Starlette middleware parameter, you can wrap your application as follows:
+
+
+    from starlette.applications import Starlette
+    from starlette.middleware.cors import CORSMiddleware
+
+    import uvicorn
+
+    app = Starlette()
+    app = CORSMiddleware(app=app, allow_origins=["*"])
+
+    # ... your routes and middleware configuration ...
+
+    if __name__ == '__main__':
+        uvicorn.run(
+            app,
+            host='0.0.0.0',
+            port=8000
+        )
+    SessionMiddleware
+    Adds signed cookie-based HTTP sessions. Session information is readable but not modifiable.
+
+    Access or modify the session data using the request.session dictionary interface.
+
+    The following arguments are supported:
+
+    secret_key - Should be a random string.
+    session_cookie - Defaults to "session".
+    max_age - Session expiry time in seconds. Defaults to 2 weeks. If set to None then the cookie will last as long as the browser session.
+    same_site - SameSite flag prevents the browser from sending session cookie along with cross-site requests. Defaults to 'lax'.
+    path - The path set for the session cookie. Defaults to '/'.
+    https_only - Indicate that Secure flag should be set (can be used with HTTPS only). Defaults to False.
+    domain - Domain of the cookie used to share cookie between subdomains or cross-domains. The browser defaults the domain to the same host that set the cookie, excluding subdomains (reference).
+
+    from starlette.applications import Starlette
+    from starlette.middleware import Middleware
+    from starlette.middleware.sessions import SessionMiddleware
+
+    routes = ...
+
+    middleware = [
+        Middleware(SessionMiddleware, secret_key=..., https_only=True)
+    ]
+
+    app = Starlette(routes=routes, middleware=middleware)
+    HTTPSRedirectMiddleware
+    Enforces that all incoming requests must either be https or wss. Any incoming requests to http or ws will be redirected to the secure scheme instead.
+
+
+    from starlette.applications import Starlette
+    from starlette.middleware import Middleware
+    from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
+
+    routes = ...
+
+    middleware = [
+        Middleware(HTTPSRedirectMiddleware)
+    ]
+
+    app = Starlette(routes=routes, middleware=middleware)
+    There are no configuration options for this middleware class.
+
+    TrustedHostMiddleware
+    Enforces that all incoming requests have a correctly set Host header, in order to guard against HTTP Host Header attacks.
+
+
+    from starlette.applications import Starlette
+    from starlette.middleware import Middleware
+    from starlette.middleware.trustedhost import TrustedHostMiddleware
+
+    routes = ...
+
+    middleware = [
+        Middleware(TrustedHostMiddleware, allowed_hosts=['example.com', '*.example.com'])
+    ]
+
+    app = Starlette(routes=routes, middleware=middleware)
+    The following arguments are supported:
+
+    allowed_hosts - A list of domain names that should be allowed as hostnames. Wildcard domains such as *.example.com are supported for matching subdomains. To allow any hostname either use allowed_hosts=["*"] or omit the middleware.
+    www_redirect - If set to True, requests to non-www versions of the allowed hosts will be redirected to their www counterparts. Defaults to True.
+    If an incoming request does not validate correctly then a 400 response will be sent.
+
+    GZipMiddleware
+    Handles GZip responses for any request that includes "gzip" in the Accept-Encoding header.
+
+    The middleware will handle both standard and streaming responses.
+
+    Buffer on streaming responses
+
+    from starlette.applications import Starlette
+    from starlette.middleware import Middleware
+    from starlette.middleware.gzip import GZipMiddleware
+
+
+    routes = ...
+
+    middleware = [
+        Middleware(GZipMiddleware, minimum_size=1000, compresslevel=9)
+    ]
+
+    app = Starlette(routes=routes, middleware=middleware)
+    The following arguments are supported:
+
+    minimum_size - Do not GZip responses that are smaller than this minimum size in bytes. Defaults to 500.
+    compresslevel - Used during GZip compression. It is an integer ranging from 1 to 9. Defaults to 9. Lower value results in faster compression but larger file sizes, while higher value results in slower compression but smaller file sizes.
+    The middleware won't GZip responses that already have either a Content-Encoding set, to prevent them from being encoded twice, or a Content-Type set to text/event-stream, to avoid compressing server-sent events.
+
+    BaseHTTPMiddleware
+    An abstract class that allows you to write ASGI middleware against a request/response interface.
+
+    Usage
+    To implement a middleware class using BaseHTTPMiddleware, you must override the async def dispatch(request, call_next) method.
+
+
+    from starlette.applications import Starlette
+    from starlette.middleware import Middleware
+    from starlette.middleware.base import BaseHTTPMiddleware
+
+
+    class CustomHeaderMiddleware(BaseHTTPMiddleware):
+        async def dispatch(self, request, call_next):
+            response = await call_next(request)
+            response.headers['Custom'] = 'Example'
+            return response
+
+    routes = ...
+
+    middleware = [
+        Middleware(CustomHeaderMiddleware)
+    ]
+
+    app = Starlette(routes=routes, middleware=middleware)
+    If you want to provide configuration options to the middleware class you should override the __init__ method, ensuring that the first argument is app, and any remaining arguments are optional keyword arguments. Make sure to set the app attribute on the instance if you do this.
+
+
+    class CustomHeaderMiddleware(BaseHTTPMiddleware):
+        def __init__(self, app, header_value='Example'):
+            super().__init__(app)
+            self.header_value = header_value
+
+        async def dispatch(self, request, call_next):
+            response = await call_next(request)
+            response.headers['Custom'] = self.header_value
+            return response
+
+
+    middleware = [
+        Middleware(CustomHeaderMiddleware, header_value='Customized')
+    ]
+
+    app = Starlette(routes=routes, middleware=middleware)
+    Middleware classes should not modify their state outside of the __init__ method. Instead you should keep any state local to the dispatch method, or pass it around explicitly, rather than mutating the middleware instance.
+
+    Limitations
+    Currently, the BaseHTTPMiddleware has some known limitations:
+
+    Using BaseHTTPMiddleware will prevent changes to contextvars.ContextVars from propagating upwards. That is, if you set a value for a ContextVar in your endpoint and try to read it from a middleware you will find that the value is not the same value you set in your endpoint (see this test for an example of this behavior).
+    To overcome these limitations, use pure ASGI middleware, as shown below.
+
+    Pure ASGI Middleware
+    The ASGI spec makes it possible to implement ASGI middleware using the ASGI interface directly, as a chain of ASGI applications that call into the next one. In fact, this is how middleware classes shipped with Starlette are implemented.
+
+    This lower-level approach provides greater control over behavior and enhanced interoperability across frameworks and servers. It also overcomes the limitations of BaseHTTPMiddleware.
+
+    Writing pure ASGI middleware
+    The most common way to create an ASGI middleware is with a class.
+
+
+    class ASGIMiddleware:
+        def __init__(self, app):
+            self.app = app
+
+        async def __call__(self, scope, receive, send):
+            await self.app(scope, receive, send)
+    The middleware above is the most basic ASGI middleware. It receives a parent ASGI application as an argument for its constructor, and implements an async __call__ method which calls into that parent application.
+
+    Some implementations such as asgi-cors use an alternative style, using functions:
+
+
+    import functools
+
+    def asgi_middleware():
+        def asgi_decorator(app):
+
+            @functools.wraps(app)
+            async def wrapped_app(scope, receive, send):
+                await app(scope, receive, send)
+
+            return wrapped_app
+
+        return asgi_decorator
+    In any case, ASGI middleware must be callables that accept three arguments: scope, receive, and send.
+
+    scope is a dict holding information about the connection, where scope["type"] may be:
+    "http": for HTTP requests.
+    "websocket": for WebSocket connections.
+    "lifespan": for ASGI lifespan messages.
+    receive and send can be used to exchange ASGI event messages with the ASGI server — more on this below. The type and contents of these messages depend on the scope type. Learn more in the ASGI specification.
+    Using pure ASGI middleware
+    Pure ASGI middleware can be used like any other middleware:
+
+
+    from starlette.applications import Starlette
+    from starlette.middleware import Middleware
+
+    from .middleware import ASGIMiddleware
+
+    routes = ...
+
+    middleware = [
+        Middleware(ASGIMiddleware),
+    ]
+
+    app = Starlette(..., middleware=middleware)
+    See also Using middleware.
+
+    Type annotations
+    There are two ways of annotating a middleware: using Starlette itself or asgiref.
+
+    Using Starlette: for most common use cases.
+
+    from starlette.types import ASGIApp, Message, Scope, Receive, Send
+
+
+    class ASGIMiddleware:
+        def __init__(self, app: ASGIApp) -> None:
+            self.app = app
+
+        async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+            if scope["type"] != "http":
+                return await self.app(scope, receive, send)
+
+            async def send_wrapper(message: Message) -> None:
+                # ... Do something
+                await send(message)
+
+            await self.app(scope, receive, send_wrapper)
+    Using asgiref: for more rigorous type hinting.
+
+    from asgiref.typing import ASGI3Application, ASGIReceiveCallable, ASGISendCallable, Scope
+    from asgiref.typing import ASGIReceiveEvent, ASGISendEvent
+
+
+    class ASGIMiddleware:
+        def __init__(self, app: ASGI3Application) -> None:
+            self.app = app
+
+        async def __call__(self, scope: Scope, receive: ASGIReceiveCallable, send: ASGISendCallable) -> None:
+            if scope["type"] != "http":
+                await self.app(scope, receive, send)
+                return
+
+            async def send_wrapper(message: ASGISendEvent) -> None:
+                # ... Do something
+                await send(message)
+
+            return await self.app(scope, receive, send_wrapper)
+    Common patterns
+    Processing certain requests only
+    ASGI middleware can apply specific behavior according to the contents of scope.
+
+    For example, to only process HTTP requests, write this...
+
+
+    class ASGIMiddleware:
+        def __init__(self, app):
+            self.app = app
+
+        async def __call__(self, scope, receive, send):
+            if scope["type"] != "http":
+                await self.app(scope, receive, send)
+                return
+
+            ...  # Do something here!
+
+            await self.app(scope, receive, send)
+    Likewise, WebSocket-only middleware would guard on scope["type"] != "websocket".
+
+    The middleware may also act differently based on the request method, URL, headers, etc.
+
+    Reusing Starlette components
+    Starlette provides several data structures that accept the ASGI scope, receive and/or send arguments, allowing you to work at a higher level of abstraction. Such data structures include Request, Headers, QueryParams, URL, etc.
+
+    For example, you can instantiate a Request to more easily inspect an HTTP request:
+
+
+    from starlette.requests import Request
+
+    class ASGIMiddleware:
+        def __init__(self, app):
+            self.app = app
+
+        async def __call__(self, scope, receive, send):
+            if scope["type"] == "http":
+                request = Request(scope)
+                ... # Use `request.method`, `request.url`, `request.headers`, etc.
+
+            await self.app(scope, receive, send)
+    You can also reuse responses, which are ASGI applications as well.
+
+    Sending eager responses
+    Inspecting the connection scope allows you to conditionally call into a different ASGI app. One use case might be sending a response without calling into the app.
+
+    As an example, this middleware uses a dictionary to perform permanent redirects based on the requested path. This could be used to implement ongoing support of legacy URLs in case you need to refactor route URL patterns.
+
+
+    from starlette.datastructures import URL
+    from starlette.responses import RedirectResponse
+
+    class RedirectsMiddleware:
+        def __init__(self, app, path_mapping: dict):
+            self.app = app
+            self.path_mapping = path_mapping
+
+        async def __call__(self, scope, receive, send):
+            if scope["type"] != "http":
+                await self.app(scope, receive, send)
+                return
+
+            url = URL(scope=scope)
+
+            if url.path in self.path_mapping:
+                url = url.replace(path=self.path_mapping[url.path])
+                response = RedirectResponse(url, status_code=301)
+                await response(scope, receive, send)
+                return
+
+            await self.app(scope, receive, send)
+    Example usage would look like this:
+
+
+    from starlette.applications import Starlette
+    from starlette.middleware import Middleware
+
+    routes = ...
+
+    redirections = {
+        "/v1/resource/": "/v2/resource/",
+        # ...
+    }
+
+    middleware = [
+        Middleware(RedirectsMiddleware, path_mapping=redirections),
+    ]
+
+    app = Starlette(routes=routes, middleware=middleware)
+    Inspecting or modifying the request
+    Request information can be accessed or changed by manipulating the scope. For a full example of this pattern, see Uvicorn's ProxyHeadersMiddleware which inspects and tweaks the scope when serving behind a frontend proxy.
+
+    Besides, wrapping the receive ASGI callable allows you to access or modify the HTTP request body by manipulating http.request ASGI event messages.
+
+    As an example, this middleware computes and logs the size of the incoming request body...
+
+
+    class LoggedRequestBodySizeMiddleware:
+        def __init__(self, app):
+            self.app = app
+
+        async def __call__(self, scope, receive, send):
+            if scope["type"] != "http":
+                await self.app(scope, receive, send)
+                return
+
+            body_size = 0
+
+            async def receive_logging_request_body_size():
+                nonlocal body_size
+
+                message = await receive()
+                assert message["type"] == "http.request"
+
+                body_size += len(message.get("body", b""))
+
+                if not message.get("more_body", False):
+                    print(f"Size of request body was: {body_size} bytes")
+
+                return message
+
+            await self.app(scope, receive_logging_request_body_size, send)
+    Likewise, WebSocket middleware may manipulate websocket.receive ASGI event messages to inspect or alter incoming WebSocket data.
+
+    For an example that changes the HTTP request body, see msgpack-asgi.
+
+    Inspecting or modifying the response
+    Wrapping the send ASGI callable allows you to inspect or modify the HTTP response sent by the underlying application. To do so, react to http.response.start or http.response.body ASGI event messages.
+
+    As an example, this middleware adds some fixed extra response headers:
+
+
+    from starlette.datastructures import MutableHeaders
+
+    class ExtraResponseHeadersMiddleware:
+        def __init__(self, app, headers):
+            self.app = app
+            self.headers = headers
+
+        async def __call__(self, scope, receive, send):
+            if scope["type"] != "http":
+                return await self.app(scope, receive, send)
+
+            async def send_with_extra_headers(message):
+                if message["type"] == "http.response.start":
+                    headers = MutableHeaders(scope=message)
+                    for key, value in self.headers:
+                        headers.append(key, value)
+
+                await send(message)
+
+            await self.app(scope, receive, send_with_extra_headers)
+    See also asgi-logger for an example that inspects the HTTP response and logs a configurable HTTP access log line.
+
+    Likewise, WebSocket middleware may manipulate websocket.send ASGI event messages to inspect or alter outgoing WebSocket data.
+
+    Note that if you change the response body, you will need to update the response Content-Length header to match the new response body length. See brotli-asgi for a complete example.
+
+    Passing information to endpoints
+    If you need to share information with the underlying app or endpoints, you may store it into the scope dictionary. Note that this is a convention -- for example, Starlette uses this to share routing information with endpoints -- but it is not part of the ASGI specification. If you do so, be sure to avoid conflicts by using keys that have low chances of being used by other middleware or applications.
+
+    For example, when including the middleware below, endpoints would be able to access request.scope["asgi_transaction_id"].
+
+
+    import uuid
+
+    class TransactionIDMiddleware:
+        def __init__(self, app):
+            self.app = app
+
+        async def __call__(self, scope, receive, send):
+            scope["asgi_transaction_id"] = uuid.uuid4()
+            await self.app(scope, receive, send)
+    Cleanup and error handling
+    You can wrap the application in a try/except/finally block or a context manager to perform cleanup operations or do error handling.
+
+    For example, the following middleware might collect metrics and process application exceptions...
+
+
+    import time
+
+    class MonitoringMiddleware:
+        def __init__(self, app):
+            self.app = app
+
+        async def __call__(self, scope, receive, send):
+            start = time.time()
+            try:
+                await self.app(scope, receive, send)
+            except Exception as exc:
+                ...  # Process the exception
+                raise
+            finally:
+                end = time.time()
+                elapsed = end - start
+                ...  # Submit `elapsed` as a metric to a monitoring backend
+    See also timing-asgi for a full example of this pattern.
+
+    Gotchas
+    ASGI middleware should be stateless
+    Because ASGI is designed to handle concurrent requests, any connection-specific state should be scoped to the __call__ implementation. Not doing so would typically lead to conflicting variable reads/writes across requests, and most likely bugs.
+
+    As an example, this would conditionally replace the response body, if an X-Mock header is present in the response...
+
+
+    ✅ Do
+    ❌ Don't
+
+    from starlette.datastructures import Headers
+
+    class MockResponseBodyMiddleware:
+        def __init__(self, app, content):
+            self.app = app
+            self.content = content
+
+        async def __call__(self, scope, receive, send):
+            if scope["type"] != "http":
+                await self.app(scope, receive, send)
+                return
+
+            # A flag that we will turn `True` if the HTTP response
+            # has the 'X-Mock' header.
+            # ✅: Scoped to this function.
+            should_mock = False
+
+            async def maybe_send_with_mock_content(message):
+                nonlocal should_mock
+
+                if message["type"] == "http.response.start":
+                    headers = Headers(raw=message["headers"])
+                    should_mock = headers.get("X-Mock") == "1"
+                    await send(message)
+
+                elif message["type"] == "http.response.body":
+                    if should_mock:
+                        message = {"type": "http.response.body", "body": self.content}
+                    await send(message)
+
+            await self.app(scope, receive, maybe_send_with_mock_content)
+
+    See also GZipMiddleware for a full example implementation that navigates this potential gotcha.
+
+    Further reading
+    This documentation should be enough to have a good basis on how to create an ASGI middleware.
+
+    Nonetheless, there are great articles about the subject:
+
+    Introduction to ASGI: Emergence of an Async Python Web Ecosystem
+    How to write ASGI middleware
+    Using middleware in other frameworks
+    To wrap ASGI middleware around other ASGI applications, you should use the more general pattern of wrapping the application instance:
+
+
+    app = TrustedHostMiddleware(app, allowed_hosts=['example.com'])
+    You can do this with a Starlette application instance too, but it is preferable to use the middleware=<List of Middleware instances> style, as it will:
+
+    Ensure that everything remains wrapped in a single outermost ServerErrorMiddleware.
+    Preserves the top-level app instance.
+    Applying middleware to groups of routes
+    Middleware can also be added to Mount instances, which allows you to apply middleware to a group of routes or a sub-application:
+
+
+    from starlette.applications import Starlette
+    from starlette.middleware import Middleware
+    from starlette.middleware.gzip import GZipMiddleware
+    from starlette.routing import Mount, Route
+
+
+    routes = [
+        Mount(
+            "/",
+            routes=[
+                Route(
+                    "/example",
+                    endpoint=...,
+                )
+            ],
+            middleware=[Middleware(GZipMiddleware)]
+        )
+    ]
+
+    app = Starlette(routes=routes)
+    Note that middleware used in this way is not wrapped in exception handling middleware like the middleware applied to the Starlette application is. This is often not a problem because it only applies to middleware that inspect or modify the Response, and even then you probably don't want to apply this logic to error responses. If you do want to apply the middleware logic to error responses only on some routes you have a couple of options:
+
+    Add an ExceptionMiddleware onto the Mount
+    Add a try/except block to your middleware and return an error response from there
+    Split up marking and processing into two middlewares, one that gets put on Mount which marks the response as needing processing (for example by setting scope["log-response"] = True) and another applied to the Starlette application that does the heavy lifting.
+    The Route/WebSocket class also accepts a middleware argument, which allows you to apply middleware to a single route:
+
+
+    from starlette.applications import Starlette
+    from starlette.middleware import Middleware
+    from starlette.middleware.gzip import GZipMiddleware
+    from starlette.routing import Route
+
+
+    routes = [
+        Route(
+            "/example",
+            endpoint=...,
+            middleware=[Middleware(GZipMiddleware)]
+        )
+    ]
+
+    app = Starlette(routes=routes)
+    You can also apply middleware to the Router class, which allows you to apply middleware to a group of routes:
+
+
+    from starlette.applications import Starlette
+    from starlette.middleware import Middleware
+    from starlette.middleware.gzip import GZipMiddleware
+    from starlette.routing import Route, Router
+
+
+    routes = [
+        Route("/example", endpoint=...),
+        Route("/another", endpoint=...),
+    ]
+
+    router = Router(routes=routes, middleware=[Middleware(GZipMiddleware)])
+    Third party middleware
+    asgi-auth-github
+    This middleware adds authentication to any ASGI application, requiring users to sign in using their GitHub account (via OAuth). Access can be restricted to specific users or to members of specific GitHub organizations or teams.
+
+    asgi-csrf
+    Middleware for protecting against CSRF attacks. This middleware implements the Double Submit Cookie pattern, where a cookie is set, then it is compared to a csrftoken hidden form field or an x-csrftoken HTTP header.
+
+    AuthlibMiddleware
+    A drop-in replacement for Starlette session middleware, using authlib's jwt module.
+
+    BugsnagMiddleware
+    A middleware class for logging exceptions to Bugsnag.
+
+    CSRFMiddleware
+    Middleware for protecting against CSRF attacks. This middleware implements the Double Submit Cookie pattern, where a cookie is set, then it is compared to an x-csrftoken HTTP header.
+
+    EarlyDataMiddleware
+    Middleware and decorator for detecting and denying TLSv1.3 early data requests.
+
+    PrometheusMiddleware
+    A middleware class for capturing Prometheus metrics related to requests and responses, including in progress requests, timing...
+
+    ProxyHeadersMiddleware
+    Uvicorn includes a middleware class for determining the client IP address, when proxy servers are being used, based on the X-Forwarded-Proto and X-Forwarded-For headers. For more complex proxy configurations, you might want to adapt this middleware.
+
+    RateLimitMiddleware
+    A rate limit middleware. Regular expression matches url; flexible rules; highly customizable. Very easy to use.
+
+    RequestIdMiddleware
+    A middleware class for reading/generating request IDs and attaching them to application logs.
+
+    RollbarMiddleware
+    A middleware class for logging exceptions, errors, and log messages to Rollbar.
+
+    StarletteOpentracing
+    A middleware class that emits tracing info to OpenTracing.io compatible tracers and can be used to profile and monitor distributed applications.
+
+    SecureCookiesMiddleware
+    Customizable middleware for adding automatic cookie encryption and decryption to Starlette applications, with extra support for existing cookie-based middleware.
+
+    TimingMiddleware
+    A middleware class to emit timing information (cpu and wall time) for each request which passes through it. Includes examples for how to emit these timings as statsd metrics.
+
+    WSGIMiddleware
+    A middleware class in charge of converting a WSGI application into an ASGI one.
+
+## Features: Static Files
+
+    Static Files
+    Starlette also includes a StaticFiles class for serving files in a given directory:
+
+    StaticFiles
+    Signature: StaticFiles(directory=None, packages=None, html=False, check_dir=True, follow_symlink=False)
+
+    directory - A string or os.PathLike denoting a directory path.
+    packages - A list of strings or list of tuples of strings of python packages.
+    html - Run in HTML mode. Automatically loads index.html for directories if such file exist.
+    check_dir - Ensure that the directory exists upon instantiation. Defaults to True.
+    follow_symlink - A boolean indicating if symbolic links for files and directories should be followed. Defaults to False.
+    You can combine this ASGI application with Starlette's routing to provide comprehensive static file serving.
+
+
+    from starlette.applications import Starlette
+    from starlette.routing import Mount
+    from starlette.staticfiles import StaticFiles
+
+
+    routes = [
+        ...
+        Mount('/static', app=StaticFiles(directory='static'), name="static"),
+    ]
+
+    app = Starlette(routes=routes)
+    Static files will respond with "404 Not found" or "405 Method not allowed" responses for requests which do not match. In HTML mode if 404.html file exists it will be shown as 404 response.
+
+    The packages option can be used to include "static" directories contained within a python package. The Python "bootstrap4" package is an example of this.
+
+
+    from starlette.applications import Starlette
+    from starlette.routing import Mount
+    from starlette.staticfiles import StaticFiles
+
+
+    routes=[
+        ...
+        Mount('/static', app=StaticFiles(directory='static', packages=['bootstrap4']), name="static"),
+    ]
+
+    app = Starlette(routes=routes)
+    By default StaticFiles will look for statics directory in each package, you can change the default directory by specifying a tuple of strings.
+
+
+    routes=[
+        ...
+        Mount('/static', app=StaticFiles(packages=[('bootstrap4', 'static')]), name="static"),
+    ]
+    You may prefer to include static files directly inside the "static" directory rather than using Python packaging to include static files, but it can be useful for bundling up reusable components.
+
+## Features: Background Tasks
+
+    Background Tasks
+    Starlette includes a BackgroundTask class for in-process background tasks.
+
+    A background task should be attached to a response, and will run only once the response has been sent.
+
+    Background Task
+    Used to add a single background task to a response.
+
+    Signature: BackgroundTask(func, *args, **kwargs)
+
+
+    from starlette.applications import Starlette
+    from starlette.responses import JSONResponse
+    from starlette.routing import Route
+    from starlette.background import BackgroundTask
+
+
+    ...
+
+    async def signup(request):
+        data = await request.json()
+        username = data['username']
+        email = data['email']
+        task = BackgroundTask(send_welcome_email, to_address=email)
+        message = {'status': 'Signup successful'}
+        return JSONResponse(message, background=task)
+
+    async def send_welcome_email(to_address):
+        ...
+
+
+    routes = [
+        ...
+        Route('/user/signup', endpoint=signup, methods=['POST'])
+    ]
+
+    app = Starlette(routes=routes)
+    BackgroundTasks
+    Used to add multiple background tasks to a response.
+
+    Signature: BackgroundTasks(tasks=[])
+
+
+    from starlette.applications import Starlette
+    from starlette.responses import JSONResponse
+    from starlette.background import BackgroundTasks
+
+    async def signup(request):
+        data = await request.json()
+        username = data['username']
+        email = data['email']
+        tasks = BackgroundTasks()
+        tasks.add_task(send_welcome_email, to_address=email)
+        tasks.add_task(send_admin_notification, username=username)
+        message = {'status': 'Signup successful'}
+        return JSONResponse(message, background=tasks)
+
+    async def send_welcome_email(to_address):
+        ...
+
+    async def send_admin_notification(username):
+        ...
+
+    routes = [
+        Route('/user/signup', endpoint=signup, methods=['POST'])
+    ]
+
+    app = Starlette(routes=routes)
+    Important
+
+    The tasks are executed in order. In case one of the tasks raises an exception, the following tasks will not get the opportunity to be executed.
+
+## Features: Exceptions
+
+    Exceptions
+    Starlette allows you to install custom exception handlers to deal with how you return responses when errors or handled exceptions occur.
+
+
+    from starlette.applications import Starlette
+    from starlette.exceptions import HTTPException
+    from starlette.requests import Request
+    from starlette.responses import HTMLResponse
+
+
+    HTML_404_PAGE = ...
+    HTML_500_PAGE = ...
+
+
+    async def not_found(request: Request, exc: HTTPException):
+        return HTMLResponse(content=HTML_404_PAGE, status_code=exc.status_code)
+
+    async def server_error(request: Request, exc: HTTPException):
+        return HTMLResponse(content=HTML_500_PAGE, status_code=exc.status_code)
+
+
+    exception_handlers = {
+        404: not_found,
+        500: server_error
+    }
+
+    app = Starlette(routes=routes, exception_handlers=exception_handlers)
+    If debug is enabled and an error occurs, then instead of using the installed 500 handler, Starlette will respond with a traceback response.
+
+
+    app = Starlette(debug=True, routes=routes, exception_handlers=exception_handlers)
+    As well as registering handlers for specific status codes, you can also register handlers for classes of exceptions.
+
+    In particular you might want to override how the built-in HTTPException class is handled. For example, to use JSON style responses:
+
+
+    async def http_exception(request: Request, exc: HTTPException):
+        return JSONResponse({"detail": exc.detail}, status_code=exc.status_code)
+
+    exception_handlers = {
+        HTTPException: http_exception
+    }
+    The HTTPException is also equipped with the headers argument. Which allows the propagation of the headers to the response class:
+
+
+    async def http_exception(request: Request, exc: HTTPException):
+        return JSONResponse(
+            {"detail": exc.detail},
+            status_code=exc.status_code,
+            headers=exc.headers
+        )
+    You might also want to override how WebSocketException is handled:
+
+
+    async def websocket_exception(websocket: WebSocket, exc: WebSocketException):
+        await websocket.close(code=1008)
+
+    exception_handlers = {
+        WebSocketException: websocket_exception
+    }
+    Errors and handled exceptions
+    It is important to differentiate between handled exceptions and errors.
+
+    Handled exceptions do not represent error cases. They are coerced into appropriate HTTP responses, which are then sent through the standard middleware stack. By default the HTTPException class is used to manage any handled exceptions.
+
+    Errors are any other exception that occurs within the application. These cases should bubble through the entire middleware stack as exceptions. Any error logging middleware should ensure that it re-raises the exception all the way up to the server.
+
+    In practical terms, the error handled used is exception_handler[500] or exception_handler[Exception]. Both keys 500 and Exception can be used. See below:
+
+
+    async def handle_error(request: Request, exc: HTTPException):
+        # Perform some logic
+        return JSONResponse({"detail": exc.detail}, status_code=exc.status_code)
+
+    exception_handlers = {
+        Exception: handle_error  # or "500: handle_error"
+    }
+    It's important to notice that in case a BackgroundTask raises an exception, it will be handled by the handle_error function, but at that point, the response was already sent. In other words, the response created by handle_error will be discarded. In case the error happens before the response was sent, then it will use the response object - in the above example, the returned JSONResponse.
+
+    In order to deal with this behaviour correctly, the middleware stack of a Starlette application is configured like this:
+
+    ServerErrorMiddleware - Returns 500 responses when server errors occur.
+    Installed middleware
+    ExceptionMiddleware - Deals with handled exceptions, and returns responses.
+    Router
+    Endpoints
+    HTTPException
+    The HTTPException class provides a base class that you can use for any handled exceptions. The ExceptionMiddleware implementation defaults to returning plain-text HTTP responses for any HTTPException.
+
+    HTTPException(status_code, detail=None, headers=None)
+    You should only raise HTTPException inside routing or endpoints. Middleware classes should instead just return appropriate responses directly.
+
+    You can use an HTTPException on a WebSocket endpoint. In case it's raised before websocket.accept() the connection is not upgraded to a WebSocket connection, and the proper HTTP response is returned.
+
+
+    from starlette.applications import Starlette
+    from starlette.exceptions import HTTPException
+    from starlette.routing import WebSocketRoute
+    from starlette.websockets import WebSocket
+
+
+    async def websocket_endpoint(websocket: WebSocket):
+        raise HTTPException(status_code=400, detail="Bad request")
+
+
+    app = Starlette(routes=[WebSocketRoute("/ws", websocket_endpoint)])
+    WebSocketException
+    You can use the WebSocketException class to raise errors inside of WebSocket endpoints.
+
+    WebSocketException(code=1008, reason=None)
+    You can set any code valid as defined in the specification.
+
+## Features: Thread Pool
+
+    Thread Pool
+    Starlette uses a thread pool in several scenarios to avoid blocking the event loop:
+
+    When you create a synchronous endpoint using def instead of async def
+    When serving files with FileResponse
+    When handling file uploads with UploadFile
+    When running synchronous background tasks with BackgroundTask
+    And some other scenarios that may not be documented...
+    Starlette will run your code in a thread pool to avoid blocking the event loop. This applies for endpoint functions and background tasks you create, but also for internal Starlette code.
+
+    To be more precise, Starlette uses anyio.to_thread.run_sync to run the synchronous code.
+
+    Concurrency Limitations
+    The default thread pool size is only 40 tokens. This means that only 40 threads can run at the same time. This limit is shared with other libraries: for example FastAPI also uses anyio to run sync dependencies, which also uses up thread capacity.
+
+    If you need to run more threads, you can increase the number of tokens:
+
+
+    import anyio.to_thread
+
+    limiter = anyio.to_thread.current_default_thread_limiter()
+    limiter.total_tokens = 100
+    The above code will increase the number of tokens to 100.
+
+    Increasing the number of threads may have a performance and memory impact, so be careful when doing so.
+
+## Features: Test Client
+
+
+    Test Client
+    API Reference
+    The test client allows you to make requests against your ASGI application, using the httpx library.
+
+
+    from starlette.responses import HTMLResponse
+    from starlette.testclient import TestClient
+
+
+    async def app(scope, receive, send):
+        assert scope['type'] == 'http'
+        response = HTMLResponse('<html><body>Hello, world!</body></html>')
+        await response(scope, receive, send)
+
+
+    def test_app():
+        client = TestClient(app)
+        response = client.get('/')
+        assert response.status_code == 200
+    The test client exposes the same interface as any other httpx session. In particular, note that the calls to make a request are just standard function calls, not awaitables.
+
+    You can use any of httpx standard API, such as authentication, session cookies handling, or file uploads.
+
+    For example, to set headers on the TestClient you can do:
+
+
+    client = TestClient(app)
+
+    # Set headers on the client for future requests
+    client.headers = {"Authorization": "..."}
+    response = client.get("/")
+
+    # Set headers for each request separately
+    response = client.get("/", headers={"Authorization": "..."})
+    And for example to send files with the TestClient:
+
+
+    client = TestClient(app)
+
+    # Send a single file
+    with open("example.txt", "rb") as f:
+        response = client.post("/form", files={"file": f})
+
+    # Send multiple files
+    with open("example.txt", "rb") as f1:
+        with open("example.png", "rb") as f2:
+            files = {"file1": f1, "file2": ("filename", f2, "image/png")}
+            response = client.post("/form", files=files)
+    For more information you can check the httpx documentation.
+
+    By default the TestClient will raise any exceptions that occur in the application. Occasionally you might want to test the content of 500 error responses, rather than allowing client to raise the server exception. In this case you should use client = TestClient(app, raise_server_exceptions=False).
+
+    Note
+
+    If you want the TestClient to run the lifespan handler, you will need to use the TestClient as a context manager. It will not be triggered when the TestClient is instantiated. You can learn more about it here.
+
+    Change client address
+    By default, the TestClient will set the client host to "testserver" and the port to 50000.
+
+    You can change the client address by setting the client attribute of the TestClient instance:
+
+
+    client = TestClient(app, client=('localhost', 8000))
+    Selecting the Async backend
+    TestClient takes arguments backend (a string) and backend_options (a dictionary). These options are passed to anyio.start_blocking_portal(). See the anyio documentation for more information about the accepted backend options. By default, asyncio is used with default options.
+
+    To run Trio, pass backend="trio". For example:
+
+
+    def test_app()
+        with TestClient(app, backend="trio") as client:
+        ...
+    To run asyncio with uvloop, pass backend_options={"use_uvloop": True}. For example:
+
+
+    def test_app()
+        with TestClient(app, backend_options={"use_uvloop": True}) as client:
+        ...
+    Testing WebSocket sessions
+    You can also test websocket sessions with the test client.
+
+    The httpx library will be used to build the initial handshake, meaning you can use the same authentication options and other headers between both http and websocket testing.
+
+
+    from starlette.testclient import TestClient
+    from starlette.websockets import WebSocket
+
+
+    async def app(scope, receive, send):
+        assert scope['type'] == 'websocket'
+        websocket = WebSocket(scope, receive=receive, send=send)
+        await websocket.accept()
+        await websocket.send_text('Hello, world!')
+        await websocket.close()
+
+
+    def test_app():
+        client = TestClient(app)
+        with client.websocket_connect('/') as websocket:
+            data = websocket.receive_text()
+            assert data == 'Hello, world!'
+    The operations on session are standard function calls, not awaitables.
+
+    It's important to use the session within a context-managed with block. This ensure that the background thread on which the ASGI application is properly terminated, and that any exceptions that occur within the application are always raised by the test client.
+
+    Establishing a test session
+    .websocket_connect(url, subprotocols=None, **options) - Takes the same set of arguments as httpx.get().
+    May raise starlette.websockets.WebSocketDisconnect if the application does not accept the websocket connection.
+
+    websocket_connect() must be used as a context manager (in a with block).
+
+    Note
+
+    The params argument is not supported by websocket_connect. If you need to pass query arguments, hard code it directly in the URL.
+
+
+    with client.websocket_connect('/path?foo=bar') as websocket:
+        ...
+    Sending data
+    .send_text(data) - Send the given text to the application.
+    .send_bytes(data) - Send the given bytes to the application.
+    .send_json(data, mode="text") - Send the given data to the application. Use mode="binary" to send JSON over binary data frames.
+    Receiving data
+    .receive_text() - Wait for incoming text sent by the application and return it.
+    .receive_bytes() - Wait for incoming bytestring sent by the application and return it.
+    .receive_json(mode="text") - Wait for incoming json data sent by the application and return it. Use mode="binary" to receive JSON over binary data frames.
+    May raise starlette.websockets.WebSocketDisconnect.
+
+    Closing the connection
+    .close(code=1000) - Perform a client-side close of the websocket connection.
+    Asynchronous tests
+    Sometimes you will want to do async things outside of your application. For example, you might want to check the state of your database after calling your app using your existing async database client/infrastructure.
+
+    For these situations, using TestClient is difficult because it creates it's own event loop and async resources (like a database connection) often cannot be shared across event loops. The simplest way to work around this is to just make your entire test async and use an async client, like httpx.AsyncClient.
+
+    Here is an example of such a test:
+
+
+    from httpx import AsyncClient, ASGITransport
+    from starlette.applications import Starlette
+    from starlette.routing import Route
+    from starlette.requests import Request
+    from starlette.responses import PlainTextResponse
+
+
+    def hello(request: Request) -> PlainTextResponse:
+        return PlainTextResponse("Hello World!")
+
+
+    app = Starlette(routes=[Route("/", hello)])
+
+
+    # if you're using pytest, you'll need to to add an async marker like:
+    # @pytest.mark.anyio  # using https://github.com/agronholm/anyio
+    # or install and configure pytest-asyncio (https://github.com/pytest-dev/pytest-asyncio)
+
+    async def test_app() -> None:
+        # note: you _must_ set `base_url` for relative urls like "/" to work
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+            r = await client.get("/")
+            assert r.status_code == 200
+            assert r.text == "Hello World!"
+
+## Optional:
