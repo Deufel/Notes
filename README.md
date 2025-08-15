@@ -1,5 +1,21 @@
 # Notes
-*from stone age*
+<details>
+ <summary> Scratch Notes </summary>
+
+ vim
+ ```
+ :set wrap
+:set nowrap
+
+:set textwidth=80 #then select section to reformat
+<g>, <q>
+```
+
+python
+```py
+exec(open('my_script.py').read()) #run python script from shell
+```
+</details>
 
 vim
 ```
