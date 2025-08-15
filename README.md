@@ -1,155 +1,151 @@
-# Notes
-<details>
- <summary> Scratch Notes </summary>
+<h1> Mike's Notepad </h1>
+<small>Random Notes - mostly obsolete - slowly cleaning up 15 mins each morning... </small>
+<small> est 8 % cleaned up </small>
+<hr>
 
- vim
+
+
+
+
+<details><summary> <H2> Python </H2></summary> 
+
+ <details><summary><h3> .venv </h3></summary>
+  
+ **Basic**
+ ```zsh
+ python3 -m venv .venv                 # Create Virtual Enviorment
+ source ./.venv/bin/activate           # Activate Virtual Enviorment
+ pip install numpy pandas              # Install Package(s)
+ pip install --upgrade <package_name>  # Upgrade Package
+ pip freeze > requirements.txt         # make requirements.txt file
+ deactivate                            # To exit .venv
+ pip install -r requirements.txt       # How to use the requirements.txt file
+
+ # ----- Additional usefull commands ----- 
+ echo ".venv/" >> .gitignore           # Don't commit venv to git
+ pip list                              # Show installed packages
+ pip show <package_name>               # Show package info/dependencies
+ pip uninstall <package_name>          # Remove a package
+ pip install -e .                      # Install current project in editable mode
+ pip install -e '.[dev]'               # Install current project in editable mode with dev packages 
+ which python                          # Verify you're using venv Python
+ rm -rf .venv                          # Delete virtual environment
  ```
- :set wrap
-:set nowrap
+ 
+ </details>
 
-:set textwidth=80 #then select section to reformat
-<g>, <q>
-```
+ <details><summary><h3> general </h3></summary>
 
-python
+ <ol>
+  <li> To specify the interpreter you can use the ```#!``` on the first line of a ```script.py``` </li>
+  <li> Note you must run this as an executable in order for the ```#!``` to work </li>
+
+  
+ </ol>
+
+ </details>
+
+
+ <details><summary><h3> SQL Lite </h3></summary>
+  
+ ```.py
+ import sqlite3
+ import pprint
+ ''' Inspect '''
+ print(db.execute("select sqlite_version()").fetchall()) # sqlite version
+ db = sqlite3.connect("your_datebase.db")
+ db.execute("select name from sqlite_master where type='table'").fetchall()  # tables
+ for row in db.execute("SELECT * FROM any_table LIMIT 10"): print(row)       # rows (tuples)
+ db.row_factory = sqlite3.Row              # will convert rows to dict (easier to work with)
+ for row in db.execute("SELECT * FROM any_table LIMIT 10"): print(dict(row)) # rows (dictionaries)
+ for row in db.execute("select name from sqlite_master where type='table'").fetchall(): pprint.pprint(dict(row)) # tables (pprint)
+ for row in db.execute("SELECT * FROM stats LIMIT 10"): pprint.pprint((dict(row))) # rows (pprint)
+ ''' Create '''
+ db.execute("CREATE TABLE events(id integer primary key, name text, start_date text, end_date text, description text);")
+ ```
+ </details>
+
+ <details><summary><h3> Usefull </h3></summary>
+ 
+ ```py
+ # Shuffle data
+ import numpy as np
+ data = np.arange(10)
+ 
+ indicies_permutation = np.random.permutation(len(data))
+ shuffled_data = data[indicies_permutation]
+ 
+ # F-string tricks
+ print(f'{n:,}')                 # 1,000s seperator with ',' (can also use _)
+ print(f'{n:>20}:')              # Rt align w/ 20 spaces; '<' for left, '^' for center
+ print(f'{datetime.now(): %c}')  # Date formatting lots more optins available ..
+ print(f'{n = }')                # Will output "n = ...." much nicer way to check vars
+ ```
+
+ </details>
+ 
+ <details><summary><h3> Pandas </h3></summary>
+ 
+ ```py
+ pd.set_option('display.max_rows', None)
+ ```
+
+ </details>
+
+
+
+
+  <details><summary><h3> Tensorflow </h3></summary>
+  **Utilities**
+     
+  ```py
+  # One Hot Encode
+  from tensorflow.keras.utils import to_categorical
+  y_train = to_categorical(train_labels)
+  ```
+
+  ** Models **
 ```py
-exec(open('my_script.py').read()) #run python script from shell
+''' 1. Architecture: a Simple stacked layers w/ relu activation can solve lots of problems '''
+model.Sequential([layers.Dense(16,actyivation="relu"),....])   # Simple stacked layers
+layers.Dense(1,activation="sigmoid"                            # last layer for binary classification
+layers.Dense(#_categories, activation="softmax"                # last layer for multiclass classification
+''' 2. Compile: '''
+model.compile(optimizer=_, loss=_,metrics=[_])   # Optimizer to "rmsprop" for 95% of models
+                                                 # loss="binary_crossentropy"             binary classification
+                                                 # loss="categorical_crossentropy"        multiclassification w/ OHE y
+                                                 # loss="sparse_categorical_crossentrop"  sing. label multiclass. w/ int y
+''' 3. Fit: Run the model '''
+model.fit(x_train, y_train, epochs=_, batch_size=_2^n_)  # epochs is number of forward + backward pass the model
+                                                         # makes attempting to reduce loss carefull not to overfit
 ```
+
+  </details>
+
+  <details><summary><h3> nb dev </h3></summary>
+    ```.py
+    nbdev_new
+    nbdev_preview
+    nbdev_prepare
+    nbdev_export
+    # nbdev_watch... 
+    ```
+  </details>
 </details>
 
-vim
-```
-:set wrap
-:set nowrap
-
-:set textwidth=80 #then select section to reformat
-<g>, <q>
-```
-python
-```py
-exec(open('my_script.py').read()) #run python script from shell
-```
-
-## Python 
-
-### VENV
-1. make venv
-```zsh
-python3 -mvenv .venv
-```
-
-2. to activate
-```
-source ./.venv/bin/activate
-```
-```zsh
-# install packages pip / pip3
-pip install jupyter matplotlib numpy pandas scipy scikit-learn
-
-# upgrade existing package
-pip install --upgrade <package_name>
-
-# make requirements.txt file
-pip freeze > requirements.txt
-
-# To exit venv
-deactivate
-
-# How to use the requirements.txt file
-pip install -r requirements.txt
-
-```
-
- - To specify the interpreter you can use the ```#!``` on the first line of a ```script.py```
-
-```python
-#!/Users/mikedeufel/code/python/HuggingFace/venv/bin/python
-```
- - Note you must run this as an executable in order for the ```#!``` to work 
-
-```zsh
-chmod +x filename.py
-ls -la #to verify
-./filename.py
-```
-### SQLite
-```.py
-import sqlite3
-import pprint
-''' Inspect '''
-print(db.execute("select sqlite_version()").fetchall()) # sqlite version
-db = sqlite3.connect("your_datebase.db")
-db.execute("select name from sqlite_master where type='table'").fetchall()  # tables
-for row in db.execute("SELECT * FROM any_table LIMIT 10"): print(row)       # rows (tuples)
-db.row_factory = sqlite3.Row              # will convert rows to dict (easier to work with)
-for row in db.execute("SELECT * FROM any_table LIMIT 10"): print(dict(row)) # rows (dictionaries)
-for row in db.execute("select name from sqlite_master where type='table'").fetchall(): pprint.pprint(dict(row)) # tables (pprint)
-for row in db.execute("SELECT * FROM stats LIMIT 10"): pprint.pprint((dict(row))) # rows (pprint)
-''' Create '''
-db.execute("CREATE TABLE events(id integer primary key, name text, start_date text, end_date text, description text);")
-```
-
-### Basic Python
-
-```py
-# Shuffle data
-import numpy as np
-data = np.arange(10)
-
-indicies_permutation = np.random.permutation(len(data))
-shuffled_data = data[indicies_permutation]
-
-# F-string tricks
-print(f'{n:,}')                 # 1,000s seperator with ',' (can also use _)
-print(f'{n:>20}:')              # Rt align w/ 20 spaces; '<' for left, '^' for center
-print(f'{datetime.now(): %c}')  # Date formatting lots more optins available ..
-print(f'{n = }')                # Will output "n = ...." much nicer way to check vars
+<details><summary><h2> VIM </h2></summary>
+ 
+ ```vim
+ :set wrap
+ :set nowrap
+ 
+ :set textwidth=80 #then select section to reformat <g>,<q>
+ ```
+ 
+</details>
 
 
-```
-
-### Pandas
-
-```py
-pd.set_option('display.max_rows', None)
-
-```
-
-
-
-### Tensorflow
-#### Utilities
-- One Hot Encode
-```py
-from tensorflow.keras.utils import to_categorical
-y_train = to_categorical(train_labels)
-```
-
-#### Models
-##### 1 Architecture ```model.Sequential([layers.Dense(16,actyivation="relu"),....])```
- - Simple stacked layers w/ relu activation can solve lots of problems
- - Make last layer ```layers.Dense(1,activation="sigmoid")``` for binary classification
- - Make last layer ```layers.Dense(#_categories, activation="softmax"``` for single label multiclassification
-
-##### 2 Compile ```model.compile(optimizer=_, loss=_,metrics=[_])```
- - Set Optimizer to "rmsprop" for 95% of models
- - if binary classificationWhen then ```loss="binary_crossentropy"```
- - if single label multiclassification with OHE y then ```loss="categorical_crossentropy"``` 
- - if single label multiclassification with int y then ```loss="sparse_categorical_crossentropy"```
-
-##### 3 Fit ```model.fit(x_train, y_train, epochs=_, batch_size=_2^n_)```
- - epochs is number of forward + backward pass the model makes attempting to reduce loss carefull not to overfit
-
-### NbDev
-```.py
-nbdev_new
-nbdev_preview
-nbdev_prepare
-nbdev_export
-# nbdev_watch... 
-```
-
-
+<details>
 ## GIT 
 
 ```zsh
@@ -240,17 +236,19 @@ git --no-pager log --oneline --graph --decorate --all       # No page
 
 ```
 
+</details>
 
 
 
+<details>
 ## Useful Terminal (Linux/Mac)
  - show ssh keys: ```ls -al ~/.ssh```
  - Copy: ```pbcopy < filename.txt```
  - Copy output: ```ls | pbcopy```
 
+</details>
 
-
-
+<details>
 ## SSH 
 1. create new ssh
 ```.bash
@@ -270,16 +268,22 @@ Host orange
 >> ssh my_server_key # Will log you on
 '''
 ```
+</details>
 
+<details> 
 ## CSS
 - Conditional Border
 ```css
 border-radius: max(0px, min(8px, calc((100vw - 4px - 100%) * 9999))) / 8px;
 ```
 
+</details>
+
+<details>
 ## Linux 
 - Increase font size
 ```
 sudo dpkg-reconfigure console-setup
 ```
+</details>
 
