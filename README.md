@@ -244,12 +244,15 @@ git --no-pager log --oneline --graph --decorate --all       # No page
 
 
 
-<details><summary><h2> Useful Terminal (Linux/Mac) </h2></summary>
- 
- - show ssh keys: ```ls -al ~/.ssh```
- - Copy: ```pbcopy < filename.txt```
- - Copy output: ```ls | pbcopy```
-
+<details><summary><h2> Linux </h2></summary>
+- Increase font size
+```bash
+sudo dpkg-reconfigure console-setup
+```
+- show ssh keys
+```bash
+ls -al ~/.ssh
+```
 </details>
 
 <details><summary><h2> SSH </h2></summary>
@@ -282,10 +285,5 @@ border-radius: max(0px, min(8px, calc((100vw - 4px - 100%) * 9999))) / 8px;
 
 </details>
 
-<details><summary><h2> Linux </h2></summary>
-- Increase font size
-```
-sudo dpkg-reconfigure console-setup
-```
-</details>
+
 
