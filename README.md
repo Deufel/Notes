@@ -145,8 +145,7 @@ model.fit(x_train, y_train, epochs=_, batch_size=_2^n_)  # epochs is number of f
 </details>
 
 
-<details>
-## GIT 
+<details><summary><h2> GIT </h2></summary>
 
 ```bash
 # GLOBAL SETTIGNS to change
@@ -245,16 +244,15 @@ git --no-pager log --oneline --graph --decorate --all       # No page
 
 
 
-<details>
-## Useful Terminal (Linux/Mac)
+<details><summary><h2> Useful Terminal (Linux/Mac) </h2></summary>
+ 
  - show ssh keys: ```ls -al ~/.ssh```
  - Copy: ```pbcopy < filename.txt```
  - Copy output: ```ls | pbcopy```
 
 </details>
 
-<details>
-## SSH 
+<details><summary><h2> SSH </h2></summary>
 1. create new ssh
 ```.bash
 ssh-keygen -t rsa -b 4096 -f ~/.ssh/my_server_key
@@ -275,8 +273,8 @@ Host orange
 ```
 </details>
 
-<details> 
-## CSS
+<details><summary><h2> CSS </h2></summary> 
+ 
 - Conditional Border
 ```css
 border-radius: max(0px, min(8px, calc((100vw - 4px - 100%) * 9999))) / 8px;
@@ -284,8 +282,7 @@ border-radius: max(0px, min(8px, calc((100vw - 4px - 100%) * 9999))) / 8px;
 
 </details>
 
-<details>
-## Linux 
+<details><summary><h2> Linux </h2></summary>
 - Increase font size
 ```
 sudo dpkg-reconfigure console-setup
