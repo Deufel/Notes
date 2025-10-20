@@ -148,6 +148,11 @@ model.fit(x_train, y_train, epochs=_, batch_size=_2^n_)  # epochs is number of f
 <details>
 ## GIT 
 
+```bash
+# GLOBAL SETTIGNS to change
+git config --global pull.rebase true
+```
+
 ```zsh
 # ARCHIVE
 git fetch origin
