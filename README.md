@@ -1,6 +1,5 @@
 <h1> Mike's Notepad </h1>
-<small>Random Notes - mostly obsolete - slowly cleaning up 15 mins each morning... </small>
-<small> est 8 % cleaned up </small>
+<small>Random Notes - mostly obsolete - </small>
 <hr>
 
 
@@ -10,7 +9,14 @@
 <details><summary> <H2> Python </H2></summary> 
 
  <details><summary><h3> .venv </h3></summary>
-  
+
+ ** uv **
+
+```bash
+uv pip compile requirements.in         # easy way to visualize dependencies on legacey python projects
+```
+
+
  **Basic**
  ```zsh
  python3 -m venv .venv                 # Create Virtual Enviorment
