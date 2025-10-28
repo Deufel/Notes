@@ -251,34 +251,46 @@ git --no-pager log --oneline --graph --decorate --all       # No page
 
 
 <details><summary><h2> Linux </h2></summary>
-- Increase font size
-```bash
-sudo dpkg-reconfigure console-setup
-```
-- show ssh keys
-```bash
-ls -al ~/.ssh
-```
+
+ ```bash
+sudo dpkg-reconfigure console-setup  # Change Font Size
+ls -al ~/.ssh                        # list ssh keys
+ ```
+
 </details>
 
 <details><summary><h2> SSH </h2></summary>
-1. create new ssh
-```.bash
-ssh-keygen -t rsa -b 4096 -f ~/.ssh/my_server_key
-```
-2. Send ssh to server
-```
-ssh-copy-id -i ~/.ssh/custom_key_name.pub user@server_ip
-```
-3. Edit ~/.ssh/config
-```
-Host orange
-    HostName server_ip
-    User user   # same as step 2
-    IdentityFile ~/.ssh/my_server_key
-'''
->> ssh my_server_key # Will log you on
-'''
+
+```bash
+# 1. Generate Key Pair (use Ed25519 for better security; add passphrase for protection)
+ssh-keygen -t ed25519 -f ~/.ssh/my_key -C "your_email@example.com"
+
+# 2. Set Secure Permissions (SSH requires this to use the keys)
+chmod 700 ~/.ssh
+chmod 600 ~/.ssh/my_key
+chmod 644 ~/.ssh/my_key.pub
+
+# 3. Copy Public Key to Server (initially uses password; replace user@server_ip)
+ssh-copy-id -i ~/.ssh/my_key.pub user@server_ip
+
+# 4. Configure SSH Client (~/.ssh/config; create if needed, chmod 600 after)
+# Host my_server
+#     HostName server_ip
+#     User user
+#     IdentityFile ~/.ssh/my_key  # Private key (not .pub)
+#     IdentitiesOnly yes  # Optional: Restrict to this key
+
+# 5. Connect (uses config alias; enter passphrase if set)
+ssh my_server
+
+# 6. (Optional) Disable Password Auth on Server (after key works; requires sudo)
+# Edit /etc/ssh/sshd_config:
+# PasswordAuthentication no
+# PubkeyAuthentication yes
+# Then: sudo systemctl restart sshd
+
+# 7. (Optional) Revoke Key (if compromised; on server)
+# Remove line from ~/.ssh/authorized_keys; generate new pair
 ```
 </details>
 
