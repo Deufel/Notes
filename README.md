@@ -255,6 +255,8 @@ git --no-pager log --oneline --graph --decorate --all       # No page
  ```bash
 sudo dpkg-reconfigure console-setup  # Change Font Size
 ls -al ~/.ssh                        # list ssh keys
+mise settings add idiomatic_version_file_enable_tools python # for uv warning..
+
  ```
 
 </details>
