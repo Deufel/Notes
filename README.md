@@ -3,6 +3,12 @@
 <hr>
 
 
+<details><summary> <H2> Tips </H2></summary> 
+
+ ```
+ r.jina.ai/<url> # Convert to any url to markdown
+ ```
+</details>
 
 
 
