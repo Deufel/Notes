@@ -1,26 +1,39 @@
-<h1> Mike's Notepad </h1>
-<small>Random Notes - mostly obsolete - </small>
-<hr>
+# Mike's Notepad 
 
 
 <details><summary> <H2> Tips </H2></summary> 
-
+ 
  ```
  r.jina.ai/<url> # Convert to any url to markdown
  ```
+
 </details>
-
-
 
 <details><summary> <H2> Python </H2></summary> 
 
- <details><summary><h3> .venv </h3></summary>
 
- ** uv **
+ <details><summary><h3> uv </h3></summary>
+
+
+Troubleshooting
+1. clear cache
+   
+```bash 
+uv cache clean
+```
+
+2. reinstall virtual enviorment (must have pyproject.toml) 
 
 ```bash
-uv pip compile requirements.in         # easy way to visualize dependencies on legacey python projects
+# iff you have a pyproject toml and things are broken this usualy fixed it (esp if uvx works properly)
+rm -rf .venv/        # nuke virtual enviorment 
+rm uv.lock           # Remove UV dep resolution
+uv sync              # rebuild .venv from pyproject.toml
 ```
+</details>
+
+<details><summary><h3> .venv </h3></summary>
+
 
 
  **Basic**
