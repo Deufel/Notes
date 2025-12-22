@@ -7,6 +7,13 @@
  r.jina.ai/<url> # Convert to any url to markdown
  ```
 
+ ```bash
+ss -tlnp              # to see ports
+ss -tlnp | grep :8000 # only show port 8000
+kill <pid>            # so shut one down gracefully
+kill -9 <pid>         # to force shut down
+ ```
+
 </details>
 
 <details><summary> <H2> Python </H2></summary> 
