@@ -1,0 +1,59 @@
+
+User calls Div("Hello", cls="container")
+            |
+            v
+    [partial pre-fills ft('div', ...)]
+            |
+            v
+    ft('div', "Hello", cls="container")
+            |
+            v
+    _preproc(("Hello",), {cls:"container"})
+       |                    |
+       v                    v
+  Check generator?    attrmap/valmap
+  Flatten tuples      cls -> class
+       |                    |
+       +--------------------+
+                |
+                v
+    Returns: (("Hello",), {"class":"container"})
+                |
+                v
+    FT('div', ("Hello",), {"class":"container"})
+    [Python object stored in memory]
+                |
+                v
+         to_xml(FT_object)
+                |
+                v
+            _to_xml()
+                |
+       +--------+--------+
+       |        |        |
+       v        v        v
+    tuple?   None?   string?
+       |        |        |
+       +--------+--------+
+                |
+                v
+           FT object!
+                |
+       +--------+--------+
+       |                 |
+       v                 v
+  Build opening      Process attrs
+  tag string         (_to_attr)
+       |                 |
+       +--------+--------+
+                |
+                v
+       Recurse on children
+       (call _to_xml on each)
+                |
+                v
+       Build closing tag
+                |
+                v
+    "<div class=\"container\">Hello</div>"
+
