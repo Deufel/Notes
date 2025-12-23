@@ -1,9 +1,8 @@
 # Mike's Notepad 
 
 
-<details><summary> <H2> Tips </H2></summary> 
  
- ```
+ ```url
  r.jina.ai/<url> # Convert to any url to markdown
  ```
 
@@ -14,7 +13,10 @@ kill <pid>            # so shut one down gracefully
 kill -9 <pid>         # to force shut down
  ```
 
-</details>
+ ```bash
+# default python .gitignore
+curl -L https://raw.githubusercontent.com/github/gitignore/main/Python.gitignore -o .gitignore 
+ ```
 
 <details><summary> <H2> Python </H2></summary> 
 
@@ -170,10 +172,16 @@ model.fit(x_train, y_train, epochs=_, batch_size=_2^n_)  # epochs is number of f
  ```vim
  :set wrap
  :set nowrap
- 
  :set textwidth=80 #then select section to reformat <g>,<q>
  ```
- 
+ ```bash
+# in normal mode
+<C> # delete the 
+
+ # in visual mode
+ <g><c> # toggle comment
+ ```
+
 </details>
 
 
