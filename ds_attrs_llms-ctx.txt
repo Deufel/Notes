@@ -1,0 +1,51 @@
+## Datastar Attributes Reference
+
+### Core Attributes
+
+| Attribute | Description | Modifiers |
+|-----------|-------------|-----------|
+| `data-attr:name` | Sets any HTML attribute to an expression, keeps in sync. Can also use object syntax for multiple. | — |
+| `data-bind:signal` | Two-way binding between signal and element value (input/select/textarea). Creates signal if missing. | `__case` (.camel/.kebab/.snake/.pascal) |
+| `data-class:classname` | Adds/removes class based on expression. Can use object syntax for multiple. | `__case` (.camel/.kebab/.snake/.pascal) |
+| `data-computed:signal` | Creates read-only computed signal from expression. Auto-updates when dependencies change. | `__case` (.camel/.kebab/.snake/.pascal) |
+| `data-effect` | Executes expression on load and when signals in expression change. For side effects. | — |
+| `data-ignore` | Tells Datastar to skip processing element and descendants. | `__self` (only element, not children) |
+| `data-ignore-morph` | Skips element during DOM morphing. | — |
+| `data-indicator:signal` | Creates signal that's `true` during fetch requests, `false` otherwise. | `__case` |
+| `data-init` | Runs expression when attribute initializes (page load, patched, modified). | `__delay` (.500ms/.1s), `__viewtransition` |
+| `data-json-signals` | Sets text content to JSON stringified signals. Useful for debugging. | `__terse` |
+| `data-on:event` | Attaches event listener executing expression. `evt` variable available. | `__once`, `__passive`, `__capture`, `__case`, `__delay`, `__debounce`, `__throttle`, `__viewtransition`, `__window`, `__outside`, `__prevent`, `__stop` |
+| `data-on-intersect` | Runs expression when element intersects viewport. | `__once`, `__exit`, `__half`, `__full`, `__threshold` (.25/.75), `__delay`, `__debounce`, `__throttle`, `__viewtransition` |
+| `data-on-interval` | Runs expression at regular interval (default 1s). | `__duration` (.500ms/.1s/.leading), `__viewtransition` |
+| `data-on-signal-patch` | Runs expression when signals are patched. `patch` variable available. | `__delay`, `__debounce`, `__throttle` |
+| `data-on-signal-patch-filter` | Filters which signals to watch with `{include: /regex/, exclude: /regex/}` | — |
+| `data-preserve-attr` | Preserves attribute value(s) during morphing. Space-separated list. | — |
+| `data-ref:signal` | Creates signal referencing the element. | `__case` |
+| `data-show` | Shows/hides element based on expression (true/false). | — |
+| `data-signals:name` | Patches signals. Dot notation for nesting. `null`/`undefined` removes. `_` prefix = not sent to backend. | `__case`, `__ifmissing` |
+| `data-style:property` | Sets inline CSS style to expression. Can use object syntax for multiple. | — |
+| `data-text` | Binds text content to expression. | — |
+
+### Pro Attributes 🚀
+
+| Attribute | Description | Modifiers |
+|-----------|-------------|-----------|
+| `data-animate` | Animate element attributes over time reactively. | — |
+| `data-custom-validity` | Add custom validity message to form input. Empty string = valid. | — |
+| `data-on-raf` | Runs expression on every `requestAnimationFrame`. | `__throttle` |
+| `data-on-resize` | Runs expression when element dimensions change. | `__debounce`, `__throttle` |
+| `data-persist` | Persists signals to localStorage. Filter with `{include:, exclude:}`. | `__session` (use sessionStorage) |
+| `data-query-string` | Syncs query params ↔ signals. Filter with `{include:, exclude:}`. | `__filter`, `__history` |
+| `data-replace-url` | Replaces URL without page reload. Expression value. | — |
+| `data-scroll-into-view` | Scrolls element into view. | `__smooth`, `__instant`, `__auto`, `__hstart`, `__hcenter`, `__hend`, `__hnearest`, `__vstart`, `__vcenter`, `__vend`, `__vnearest`, `__focus` |
+| `data-rocket` | Creates a Rocket web component. | — |
+| `data-view-transition` | Sets `view-transition-name` style attribute. | — |
+
+### Common Modifier Patterns
+
+**Timing modifiers** (used by many attributes):
+- `__delay.500ms` / `__delay.1s`
+- `__debounce.500ms` / `__debounce.1s` + `.leading` / `.notrailing`
+- `__throttle.500ms` / `__throttle.1s` + `.noleading` / `.trailing`
+
+**Case modifiers**: `__case.camel` (default for signals), `__case.kebab` (default for classes/events), `__case.snake`, `__case.pascal`
