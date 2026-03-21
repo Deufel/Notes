@@ -1,6 +1,8 @@
 # Mike's Notepad 
 
-
+ ```py
+ uv add --group dev <package>
+ ```
  
  ```url
  r.jina.ai/<url> # Convert to any url to markdown
