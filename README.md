@@ -20,6 +20,14 @@ kill -9 <pid>         # to force shut down
 curl -L https://raw.githubusercontent.com/github/gitignore/main/Python.gitignore -o .gitignore 
  ```
 
+sql (via apsw)
+```py
+for row in connection.execute("SELECT name, sql FROM sqlite_master WHERE type='table'"):
+    print(row[0])
+    print(row[1])
+    print()
+```
+
 <details><summary> <H2> Python </H2></summary> 
 
 
