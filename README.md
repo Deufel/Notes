@@ -3,6 +3,13 @@
  ```py
  uv add --group dev <package>
  ```
+
+Obscure python bugs 
+```py
+# Check python system text encoding type (standard > 3.15)
+locale.getencoding()
+# if not 'UTF-8' Read https://peps.python.org/pep-0686/
+```
  
  ```url
  r.jina.ai/<url> # Convert to any url to markdown
@@ -35,12 +42,7 @@ for row in connection.execute("SELECT name, sql FROM sqlite_master WHERE type='t
 
 
 Troubleshooting
-0. obscure
-```py
-# Check python system text encoding type (standard > 3.15)
-locale.getencoding()
-# if not 'UTF-8' Read https://peps.python.org/pep-0686/
-```
+
 
 1. clear cache
    
