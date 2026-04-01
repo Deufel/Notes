@@ -121,6 +121,9 @@ uv sync              # rebuild .venv from pyproject.toml
  <details><summary><h3> Usefull </h3></summary>
  
  ```py
+ # divide by zero 1 line
+ result = y and x / y
+
  # Shuffle data
  import numpy as np
  data = np.arange(10)
