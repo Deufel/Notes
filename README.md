@@ -27,6 +27,11 @@ kill -9 <pid>         # to force shut down
 curl -L https://raw.githubusercontent.com/github/gitignore/main/Python.gitignore -o .gitignore 
  ```
 
+```py
+import apsw
+list(db.execute("PRAGMA table_info(messages)"))
+```
+
 lbt helper function 
 ```bash
 lbt_new = r"""
