@@ -27,6 +27,64 @@ kill -9 <pid>         # to force shut down
 curl -L https://raw.githubusercontent.com/github/gitignore/main/Python.gitignore -o .gitignore 
  ```
 
+lbt helper function 
+```bash
+lbt_new = r"""
+function _four_col() {
+    local items=("$@")
+    local count=${#items[@]}
+    for (( i=0; i<count; i++ )); do
+        printf '%-30s' "${items[$i]}"
+        (( (i+1) % 4 == 0 )) && echo
+    done
+    echo
+}
+
+function lbt() {
+    if [ -z "$(ls -A)" ]; then
+        echo "This directory is empty."
+        return
+    fi
+
+    declare -A files
+    local directories=()
+
+    for entry in * .*; do
+        [[ "$entry" == "." || "$entry" == ".." ]] && continue
+        [[ ! -e "$entry" ]] && continue
+        if [[ -d "$entry" ]]; then
+            directories+=("$entry")
+        else
+            extension="${entry##*.}"
+            if [[ "$extension" == "$entry" ]]; then
+                extension="No Extension"
+            fi
+            files[$extension]+="${entry}\n"
+        fi
+    done
+
+    if (( ${#directories[@]} > 0 )); then
+        echo -e "\n\e[36mDirectories:\e[0m"
+        _four_col "${directories[@]}"
+    fi
+
+    for ext in "${!files[@]}"; do
+        echo -e "\n\e[34m$ext Files:\e[0m"
+        _four_col $(echo -e "${files[$ext]}")
+    done
+}
+"""
+
+# Overwrite the .bashrc with PS1 + new lbt
+ps1 = r"""export PS1='\[\e[2m\][\[\e[0m\]\[\e[36m\]\w\[\e[0m\]\[\e[2m\]]\[\e[0m\] \[\e[32m\]❯\[\e[0m\] '
+"""
+
+with open('/app/data/.bashrc', 'w') as f:
+    f.write(ps1 + lbt_new)
+
+print("Done!")
+```
+
 sql (via apsw)
 ```py
 for row in connection.execute("SELECT name, sql FROM sqlite_master WHERE type='table'"):
