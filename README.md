@@ -1,5 +1,11 @@
 # Mike's Notepad 
 
+```bash
+git tag --list --sort=-v:refname | head -10  # see latest tags on repo
+git tag -a v0.5.0 -m "Release v0.5.0"        # Make a new tag
+git push origin v0.5.0                       # push the tag
+```
+
  ```py
  uv add --group dev <package>
  ```
